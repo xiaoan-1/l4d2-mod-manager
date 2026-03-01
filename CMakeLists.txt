@@ -23,8 +23,14 @@ set(PROJECT_SOURCES
         mainwindow.ui
 )
 
+# 包含路径（解决提升控件找不到头文件的问题）
+INCLUDE_DIRECTORIES(
+    ${PROJECT_SOURCE_DIR}
+)
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 
@@ -37,6 +43,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         comp/modcard.h comp/modcard.cpp comp/modcard.ui
         comp/categorydialog.h comp/categorydialog.cpp  comp/categorydialog.ui
         comp/categorybutton.h comp/categorybutton.cpp comp/categorybutton.ui
+        cardcontainer.h cardcontainer.cpp cardcontainer.ui
+        comp/imageloader.h comp/imageloader.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET l4d2-mod-manager APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -59,6 +67,7 @@ endif()
 target_link_libraries(l4d2-mod-manager PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Sql)
+target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

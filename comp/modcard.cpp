@@ -15,6 +15,8 @@ ModCard::ModCard(QWidget *parent)
     , ui(new Ui::ModCard)
 {
     ui->setupUi(this);
+
+    setFixedSize(300, 300);
 }
 
 ModCard::~ModCard()
@@ -35,9 +37,6 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
     }
 
     QString baseDir = ModManager::getInstance()->gamePath() + modInfo.relative_path;
-
-    // 加载图片
-    loadImage(baseDir + "/" + modInfo.original_name + ".jpg");
 
     // 文件大小
     QFile modFile(baseDir + "/" + modInfo.original_name + ".vpk");
@@ -86,6 +85,16 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
 
 /**
 * @author   XiaoAn
+* @brief    获取Mod信息
+* @date     2026-02-28
+**/
+ModInfo ModCard::modInfo() const
+{
+    return m_modInfo;
+}
+
+/**
+* @author   XiaoAn
 * @brief    设置当前Mod分类
 * @date     2026-02-26
 **/
@@ -112,30 +121,12 @@ void ModCard::setCurrentCategory(const CategoryInfo &category)
 * @brief    加载Mod图片
 * @date     2026-02-25
 **/
-void ModCard::loadImage(const QString &imgPath)
+void ModCard::loadImage(const QImage &image)
 {
+    if (image.isNull()) return;
 
-    QFile imgFile(imgPath);
-    if(!imgFile.exists(imgPath)){
-        qWarning() << "文件不存在" << imgPath;
-        return;
-    }
-
-    QPixmap pixmap(imgPath);;
-
-    // 缩放图片到QLabel大小（保持宽高比，不拉伸变形）
-    QPixmap scaledPixmap = pixmap.scaled(
-        ui->label_img->size(),
-        Qt::KeepAspectRatio,
-        Qt::SmoothTransformation
-    );
-
-    if (scaledPixmap.isNull()) {
-        qWarning() << "图片加载失败：" << imgPath;
-        return;
-    }
-
-    ui->label_img->setPixmap(scaledPixmap);
+    // 设置图片
+    ui->label_img->setPixmap(QPixmap::fromImage(image));
     ui->label_img->setAlignment(Qt::AlignCenter);
 }
 
@@ -231,4 +222,6 @@ void ModCard::classifyMod()
         ui->comboBox_categorys->removeItem(categoryIdx);
     }
 }
+
+
 

@@ -6,7 +6,7 @@
 #include <QSettings>
 #include <QFileDialog>
 #include <QMessageBox>
-
+#include <QDesktopServices>
 #include <QDebug>
 
 #include "comp/categorydialog.h"
@@ -24,22 +24,42 @@ MainWindow::MainWindow(QWidget *parent)
     m_buttonGroup.addButton(ui->pushButton_trashMod);
     m_buttonGroup.setExclusive(true);
 
-    // 获取游戏路径
-    QString gamePath = ModManager::getInstance()->gamePath();
-    ui->lineEdit_gamePath->setText(gamePath);
+    // 设置菜单
+    m_settingMenu = new QMenu(this);
+    m_settingMenu->setWindowFlags(Qt::Popup);
+    m_settingMenu->addAction("设置路径", this, [=](){
+        QString gamePath = QFileDialog::getExistingDirectory(this, "选择游戏根路径", QDir::homePath(), QFileDialog::ShowDirsOnly);
+        if(gamePath.isEmpty() || !ModManager::getInstance()->setGamePath(gamePath)) return;
+    });
+    m_settingMenu->addAction("打开路径", this, [=](){
+        QString gamePath = ModManager::getInstance()->gamePath();
+        if(QDir(gamePath).exists()){
+            QDesktopServices::openUrl(QUrl::fromLocalFile(gamePath));
+        }
+    });
+
+    // 弹出设置菜单
+    connect(ui->pushButton_setting, &QPushButton::clicked, this, [=](){
+        // 获取按钮在屏幕上的绝对位置
+        QPoint globalBtnPos = ui->pushButton_setting->mapToGlobal(QPoint(0, 0));
+        m_settingMenu->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_setting->height());
+        m_settingMenu->show();
+    });
+
+    // 启动游戏
+    connect(ui->pushButton_startGame, &QPushButton::clicked, this, [=](){
+        QString gamePath = ModManager::getInstance()->gamePath();
+        if(gamePath.isEmpty()){
+            QMessageBox::warning(this, "警告", "请先设置游戏路径", QMessageBox::Ok);
+            return;
+        }
+    });
 
     // 添加自定义分类
     QList<CategoryInfo> categoryList = SqliteObj::getInstance()->getCategoryList();
     foreach (const auto &category, categoryList) {
         addCategoryButton(category);
     }
-
-    // 修改游戏路径
-    connect(ui->pushButton_dir, &QPushButton::clicked, this, [=](){
-        QString gamePath = QFileDialog::getExistingDirectory(this, "选择游戏根路径", QDir::homePath(), QFileDialog::ShowDirsOnly);
-        if(gamePath.isEmpty() || !ModManager::getInstance()->setGamePath(gamePath)) return;
-        ui->lineEdit_gamePath->setText(gamePath);
-    });
 
     // 添加自定义分类
     connect(ui->pushButton_addCategory, &QPushButton::clicked, this, [=](){
@@ -59,23 +79,26 @@ MainWindow::MainWindow(QWidget *parent)
     // 加载工坊Mod文件信息
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
         QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::WorkshopDir);
-        refreshModCards(modInfoList);
+        ui->cardContainer->clearModCard();
+        ui->cardContainer->appendModCard(modInfoList);
     });
 
     // 加载本地Mod文件信息
     connect(ui->pushButton_localMod, &QPushButton::clicked, this, [=](){
         QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::ModLocalDir);
-        refreshModCards(modInfoList);
+        ui->cardContainer->clearModCard();
+        ui->cardContainer->appendModCard(modInfoList);
     });
 
     // 加载禁用Mod文件信息
     connect(ui->pushButton_trashMod, &QPushButton::clicked, this, [=](){
         QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::ModTrashDir);
-        refreshModCards(modInfoList);
+        ui->cardContainer->clearModCard();
+        ui->cardContainer->appendModCard(modInfoList);
     });
 
     // 默认刷新
-    ui->pushButton_workshop->click();
+    emit ui->pushButton_workshop->clicked();
 }
 
 MainWindow::~MainWindow()
@@ -100,7 +123,8 @@ void MainWindow::addCategoryButton(const CategoryInfo &category)
     connect(btn, &CategoryButton::clicked, this, [=](){
         // 查询该分类的Mod信息
         QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList(category.id);
-        refreshModCards(modInfoList, category);
+        ui->cardContainer->clearModCard();
+        ui->cardContainer->appendModCard(modInfoList);
     });
 
     connect(btn, &CategoryButton::deleteCategory, this, [=](){
@@ -129,35 +153,7 @@ void MainWindow::addCategoryButton(const CategoryInfo &category)
     });
 }
 
-/**
-* @author   XiaoAn
-* @brief    刷新Mod卡片列表
-* @date     2026-02-25
-**/
-void MainWindow::refreshModCards(const QList<ModInfo> &modInfoList, const CategoryInfo &category)
-{
-    QGridLayout *gridLayout = qobject_cast<QGridLayout*>(ui->modCardList->layout());
 
-    while (gridLayout->count()) {
-        gridLayout->takeAt(0)->widget()->deleteLater();
-    }
-
-    int row = 0, col = 0;
-    foreach (const ModInfo &modInfo, modInfoList) {
-        ModCard *modCard = new ModCard(modInfo);
-        modCard->setCurrentCategory(category);
-        gridLayout->addWidget(modCard, row, col);
-
-        col++;
-        if(col == 4){
-            row++;
-            col = 0;
-        }
-    }
-
-    // 刷新Mod统计信息
-    refreshModCount();
-}
 
 /**
 * @author   XiaoAn

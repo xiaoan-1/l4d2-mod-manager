@@ -3,10 +3,12 @@
 
 #include <QMainWindow>
 #include <QButtonGroup>
+#include <QMenu>
 
 #include "sqliteobj.h"
 #include "modmanager.h"
 #include "comp/modcard.h"
+#include "cardcontainer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -27,7 +29,7 @@ private:
     void addCategoryButton(const CategoryInfo &category);
 
     // 刷新Mod卡片列表
-    void refreshModCards(const QList<ModInfo> &modInfoList, const CategoryInfo &category = CategoryInfo());
+    // void refreshModCards(const QList<ModInfo> &modInfoList, const CategoryInfo &category = CategoryInfo());
 
     // 刷新Mod统计信息
     void refreshModCount();
@@ -35,7 +37,12 @@ private:
 private:
     Ui::MainWindow *ui;
 
+    // 设置菜单
+    QMenu *m_settingMenu;
+
     // 互斥选择按钮
     QButtonGroup m_buttonGroup;
+
+    QList<ModCard*> m_modCardList;
 };
 #endif // MAINWINDOW_H

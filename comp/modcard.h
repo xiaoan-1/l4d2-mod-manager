@@ -18,13 +18,15 @@ public:
     ModCard(const ModInfo &modInfo, QWidget *parent = nullptr);
 
 public:
+    // 获取Mod信息
+    ModInfo modInfo() const;
+
     // 设置当前Mod分类
     void setCurrentCategory(const CategoryInfo &category);
 
-
-private:
     // 加载图片
-    void loadImage(const QString &imgPath);
+    void loadImage(const QImage &image);
+private:
 
     // 备注
     void remarkMod();
