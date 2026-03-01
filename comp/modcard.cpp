@@ -16,6 +16,7 @@ ModCard::ModCard(QWidget *parent)
 {
     ui->setupUi(this);
 
+    show();
     setFixedSize(300, 300);
 }
 
@@ -109,7 +110,9 @@ void ModCard::setCurrentCategory(const CategoryInfo &category)
     connect(categoryDelBtn, &QPushButton::clicked, this, [=](){
         bool ret = SqliteObj::getInstance()->removeModCategory(m_modInfo.id, category.id);
         if(ret){
-            this->deleteLater();
+            // 由父容器来销毁
+            emit destroyCard(m_modInfo.id);
+            qDebug() << "由父窗口销毁";
         }else{
             QMessageBox::warning(this, "错误", "移除分类失败！", QMessageBox::Ok);
         }
@@ -200,7 +203,7 @@ void ModCard::moveMod()
     }
 
     if(m_category.id == -1){
-        deleteLater();
+        emit destroyCard(m_modInfo.id);
     }
 }
 
@@ -223,5 +226,29 @@ void ModCard::classifyMod()
     }
 }
 
+/**
+* @author   XiaoAn
+* @brief    隐藏信号
+* @date     2026-03-01
+**/
+void ModCard::hideEvent(QHideEvent *event)
+{
+    {
+        QWidget::hideEvent(event);
+        emit visiableChanged(false); // 发射隐藏状态改变信号
+    }
+}
 
+/**
+* @author   XiaoAn
+* @brief    显示信号
+* @date     2026-03-01
+**/
+void ModCard::showEvent(QShowEvent *event)
+{
+    {
+        QWidget::showEvent(event);
+        emit visiableChanged(true); // 发射显示状态改变信号
+    }
+}
 

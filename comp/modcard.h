@@ -37,6 +37,17 @@ private:
     // 分类
     void classifyMod();
 
+protected:
+    void hideEvent(QHideEvent* event) override;
+
+    void showEvent(QShowEvent* event) override;
+
+signals:
+    // 隐藏信号
+    void visiableChanged(bool visiable);
+
+    // 销毁信号
+    void destroyCard(const int &modId);
 private:
     Ui::ModCard *ui;
 

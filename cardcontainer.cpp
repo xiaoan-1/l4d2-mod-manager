@@ -36,7 +36,10 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
         ModCard *modCard = new ModCard(modInfo, ui->centralwidget);
         modCard->setCurrentCategory(category);
         m_modCardMap.insert(modInfo.id, modCard);
-        modCard->setVisible(true);
+
+        // 卡片销毁或者隐藏时触发布局更新
+        connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
+        connect(modCard, &ModCard::visiableChanged, this, &CardContainer::updateLayout);
         // 提交Mod卡片图片加载任务
         ImageLoader::Task task;
         task.id = modInfo.id;
@@ -58,6 +61,8 @@ void CardContainer::removeModCard(const int &modId)
 {
     m_modCardMap.value(modId)->deleteLater();
     m_modCardMap.remove(modId);
+
+    updateLayout();
 }
 
 /**
@@ -164,7 +169,6 @@ void CardContainer::slot_searchCard(const QString &name)
             modCard->setVisible(false);
         }
     }
-    updateLayout();
 }
 
 /**

@@ -60,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::WorkshopDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
+        refreshModCount();
     });
 
     // 加载本地Mod文件信息
@@ -67,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::ModLocalDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
+        refreshModCount();
     });
 
     // 加载禁用Mod文件信息
@@ -74,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::ModTrashDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
+        refreshModCount();
     });
 
 
@@ -101,7 +104,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 搜索
     connect(ui->lineEdit_search, &QLineEdit::textChanged, ui->cardContainer, &CardContainer::slot_searchCard);
-
 
     // 默认刷新
     emit ui->pushButton_workshop->clicked();
