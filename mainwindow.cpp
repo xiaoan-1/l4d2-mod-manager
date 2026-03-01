@@ -55,27 +55,6 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    // 添加自定义分类
-    QList<CategoryInfo> categoryList = SqliteObj::getInstance()->getCategoryList();
-    foreach (const auto &category, categoryList) {
-        addCategoryButton(category);
-    }
-
-    // 添加自定义分类
-    connect(ui->pushButton_addCategory, &QPushButton::clicked, this, [=](){
-        CategoryDialog dialog(this);
-        if (dialog.exec() == QDialog::Accepted) {
-            QString categoryName = dialog.getCategory();
-            if(categoryName.isEmpty()) return;
-            // 插入数据库
-            if (!SqliteObj::getInstance()->appendCategory(categoryName)) {
-                QMessageBox::warning(this, "错误", "分类添加失败！", QMessageBox::Ok);
-                return;
-            }
-            addCategoryButton(SqliteObj::getInstance()->getCategoryInfo(categoryName));
-        }
-    });
-
     // 加载工坊Mod文件信息
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
         QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::WorkshopDir);
@@ -96,6 +75,33 @@ MainWindow::MainWindow(QWidget *parent)
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
     });
+
+
+    // 添加自定义分类到导航栏
+    QList<CategoryInfo> categoryList = SqliteObj::getInstance()->getCategoryList();
+    foreach (const auto &category, categoryList) {
+        addCategoryButton(category);
+    }
+
+    // 手动添加自定义分类
+    connect(ui->pushButton_addCategory, &QPushButton::clicked, this, [=](){
+        CategoryDialog dialog(this);
+        if (dialog.exec() == QDialog::Accepted) {
+            QString categoryName = dialog.getCategory();
+            if(categoryName.isEmpty()) return;
+            // 插入数据库
+            if (!SqliteObj::getInstance()->appendCategory(categoryName)) {
+                QMessageBox::warning(this, "错误", "分类添加失败！", QMessageBox::Ok);
+                return;
+            }
+            addCategoryButton(SqliteObj::getInstance()->getCategoryInfo(categoryName));
+        }
+    });
+
+
+    // 搜索
+    connect(ui->lineEdit_search, &QLineEdit::textChanged, ui->cardContainer, &CardContainer::slot_searchCard);
+
 
     // 默认刷新
     emit ui->pushButton_workshop->clicked();

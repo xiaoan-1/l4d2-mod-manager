@@ -596,7 +596,7 @@ font-weight: bold;</string>
         </spacer>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit">
+        <widget class="QLineEdit" name="lineEdit_search">
          <property name="text">
           <string/>
          </property>

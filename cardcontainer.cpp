@@ -142,6 +142,33 @@ void CardContainer::setContentsMargins(int left, int top, int right, int bottom)
 
 /**
 * @author   XiaoAn
+* @brief    搜索卡片
+* @date     2026-03-01
+**/
+void CardContainer::slot_searchCard(const QString &name)
+{
+    if(name.isEmpty()){
+        // 全显示
+        foreach (ModCard *modCard, m_modCardMap.values()) {
+            modCard->setVisible(true);
+        }
+    }
+
+    // 匹配显示
+    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
+        ModCard *modCard = it.value();
+        if(modCard->modInfo().custom_name.contains(name)
+            || modCard->modInfo().original_name.contains(name)){
+            modCard->setVisible(true);
+        }else{
+            modCard->setVisible(false);
+        }
+    }
+    updateLayout();
+}
+
+/**
+* @author   XiaoAn
 * @brief    更新布局
 * @date     2026-03-01
 **/

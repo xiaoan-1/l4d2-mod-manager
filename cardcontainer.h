@@ -38,6 +38,9 @@ public:
     // 设置边距
     void setContentsMargins(int left, int top, int right, int bottom);
 
+public slots:
+    void slot_searchCard(const QString &name);
+
 private:
     // 刷新布局
     void updateLayout();
