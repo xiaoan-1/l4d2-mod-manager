@@ -322,7 +322,6 @@ void ImageLoader::processTasks()
 
             // 等待任务完成
             if (m_runningTasks.size() >= m_maxConcurrentTasks) {
-                qDebug() << "并发数已达上限，等待中..." << "运行数:" << m_runningTasks.size() << "最大并发:" << m_maxConcurrentTasks;
                 m_condition.wait(&m_mutex, 1000);
                 continue;
             }

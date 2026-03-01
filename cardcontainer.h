@@ -2,7 +2,7 @@
 #define CARDCONTAINER_H
 
 #include <QWidget>
-
+#include <QResizeEvent>
 #include "comp/modcard.h"
 #include "comp/imageloader.h"
 
@@ -20,30 +20,33 @@ public:
 
     // 添加Mod卡片
     void appendModCard(const ModInfo &modInfo, const CategoryInfo &category = CategoryInfo());
-
-    // 添加多个Mod卡片
     void appendModCard(const QList<ModInfo> &modInfoList, const CategoryInfo &category = CategoryInfo());
 
+    // 移除Mod卡片
+    void removeModCard(const int &modId);
 
     // 清空Mod卡片
     void clearModCard();
 
+    // 设置卡片大小
+    void setCardFixedSize(const QSize& size);
+    // 设置卡片之间的间距
+    void setSpacing(int horizontal, int vertical);
+    void setHorizontalSpacing(int spacing);
+    void setVerticalSpacing(int spacing);
+
+    // 设置边距
+    void setContentsMargins(int left, int top, int right, int bottom);
+
 private:
-
-    void loadCardImage();
-
-public slots:
-    // 加载指定区域的卡片
-    // void loadVisibleCards();
-
-    // 暂停加载
-    // void pauseLoading();
-
-    // 恢复加载
-    // void resumeLoading();
+    // 刷新布局
+    void updateLayout();
 
 private slots:
     void onImageLoaded(const int& modId, const QImage& image, bool fromCache);
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     Ui::CardContainer *ui;
@@ -51,6 +54,25 @@ private:
     QMap<int, ModCard*> m_modCardMap;
     // 图片加载器
     ImageLoader* m_imageLoader;
+
+    // 当前列数
+    int m_colCount = 0;
+
+    // 卡片固定大小
+    QSize m_cardSize = {300, 300};
+
+    // 间距
+    int m_horizontalSpacing = 10;
+    int m_verticalSpacing = 10;
+
+    // 边距
+    int m_leftMargin = 0;
+    int m_topMargin = 0;
+    int m_rightMargin = 0;
+    int m_bottomMargin = 0;
+
+    // 是否需要重新布局
+    bool m_needsLayout = true;
 };
 
 #endif // CARDCONTAINER_H
