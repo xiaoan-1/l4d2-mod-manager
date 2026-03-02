@@ -1,29 +1,34 @@
-#ifndef MODMANAGER_H
-#define MODMANAGER_H
+#ifndef GAMEMANAGER_H
+#define GAMEMANAGER_H
 
 #include <QObject>
 
 #include "sqliteobj.h"
 
-class ModManager : public QObject
+class GameManager : public QObject
 {
     Q_OBJECT
 private:
-    explicit ModManager(QObject *parent = nullptr);
-    ~ModManager();
+    explicit GameManager(QObject *parent = nullptr);
+    ~GameManager();
     // 禁止拷贝
-    ModManager(const ModManager&) = delete;
-    ModManager& operator=(const ModManager&) = delete;
+    GameManager(const GameManager&) = delete;
+    GameManager& operator=(const GameManager&) = delete;
 
 public:
-    static ModManager* getInstance(QObject *parent = nullptr);
+    static GameManager* getInstance(QObject *parent = nullptr);
 
     static QString getFileSizeWithUnit(const quint64 &fileSize);
-public:    
-    QString gamePath() const;
+public:
+    QString gamePath() const { return m_gamePath; };
+
+    QString gameParam() const { return m_gameParam; };
 
     // 设置游戏根路径
     bool setGamePath(const QString& path);
+
+    // 设置游戏启动参数
+    void setGameParam(const QString& gameParam);
 
     // 扫描相对路径下的Mod文件信息
     QList<ModInfo> scanDirModInfo(const QString &relativePath);
@@ -40,6 +45,9 @@ public:
 private:
     // 游戏根路径
     QString m_gamePath;
+
+    // 游戏启动参数
+    QString m_gameParam;
 };
 
-#endif // MODMANAGER_H
+#endif // GAMEMANAGER_H

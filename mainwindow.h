@@ -6,7 +6,7 @@
 #include <QMenu>
 
 #include "sqliteobj.h"
-#include "modmanager.h"
+#include "gamemanager.h"
 #include "comp/modcard.h"
 #include "cardcontainer.h"
 
@@ -30,6 +30,12 @@ private:
 
     // 刷新Mod统计信息
     void refreshModCount();
+
+    // 设置游戏启动参数
+    void showGameParamDilaog();
+
+    // 启动游戏
+    void startGame();
 
 private:
     Ui::MainWindow *ui;

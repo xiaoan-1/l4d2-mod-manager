@@ -37,7 +37,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
     qt_add_executable(l4d2-mod-manager
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        modmanager.h modmanager.cpp
+        gamemanager.h gamemanager.cpp
         sqliteobj.h sqliteobj.cpp
         header.h
         comp/modcard.h comp/modcard.cpp comp/modcard.ui
@@ -45,6 +45,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         comp/categorybutton.h comp/categorybutton.cpp comp/categorybutton.ui
         cardcontainer.h cardcontainer.cpp cardcontainer.ui
         comp/imageloader.h comp/imageloader.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET l4d2-mod-manager APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

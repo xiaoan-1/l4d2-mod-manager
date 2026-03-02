@@ -8,7 +8,7 @@
 #include <QMessageBox>
 #include <QLineEdit>
 
-#include "../modmanager.h"
+#include "../gamemanager.h"
 
 ModCard::ModCard(QWidget *parent)
     : QWidget(parent)
@@ -111,12 +111,12 @@ void ModCard::updateModInfo()
         ui->label_name->setText(m_modInfo.custom_name);
     }
 
-    QString baseDir = ModManager::getInstance()->gamePath() + m_modInfo.relative_path;
+    QString baseDir = GameManager::getInstance()->gamePath() + m_modInfo.relative_path;
 
     // 文件大小
     QFile modFile(baseDir + "/" + m_modInfo.original_name + ".vpk");
     if(modFile.exists()){
-        QString sizeStr = ModManager::getFileSizeWithUnit(modFile.size());
+        QString sizeStr = GameManager::getFileSizeWithUnit(modFile.size());
         ui->label_size->setText(sizeStr);
     }else {
         ui->label_size->setText("0kb");
@@ -142,7 +142,7 @@ void ModCard::updateModInfo()
         ui->comboBox_categorys->addItem(category.name);
     }
 
-    if(m_modInfo.relative_path == ModManager::ModTrashDir){
+    if(m_modInfo.relative_path == GameManager::ModTrashDir){
         ui->pushButton_move->setText("启用");
     }else{
         ui->pushButton_move->setText("禁用");
@@ -225,28 +225,28 @@ void ModCard::remark()
 **/
 void ModCard::transfer()
 {
-    QString gamePath = ModManager::getInstance()->gamePath();
-    if(m_modInfo.relative_path == ModManager::ModTrashDir){
+    QString gamePath = GameManager::getInstance()->gamePath();
+    if(m_modInfo.relative_path == GameManager::ModTrashDir){
         // 移回本地
         QFile modFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".vpk");
-        modFile.rename(gamePath + ModManager::ModLocalDir + "/" + m_modInfo.original_name + ".vpk");
+        modFile.rename(gamePath + GameManager::ModLocalDir + "/" + m_modInfo.original_name + ".vpk");
 
         QFile imgFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".jpg");
-        imgFile.rename(gamePath + ModManager::ModLocalDir + "/" + m_modInfo.original_name + ".jpg");
+        imgFile.rename(gamePath + GameManager::ModLocalDir + "/" + m_modInfo.original_name + ".jpg");
 
         // 修改记录
-        SqliteObj::getInstance()->updateModRelativePath(m_modInfo.id, ModManager::ModLocalDir);
+        SqliteObj::getInstance()->updateModRelativePath(m_modInfo.id, GameManager::ModLocalDir);
         ui->pushButton_move->setText("禁用");
     }else{
         // 移到回收站
         QFile modFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".vpk");
-        modFile.rename(gamePath + ModManager::ModTrashDir + "/" + m_modInfo.original_name + ".vpk");
+        modFile.rename(gamePath + GameManager::ModTrashDir + "/" + m_modInfo.original_name + ".vpk");
 
         QFile imgFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".jpg");
-        imgFile.rename(gamePath + ModManager::ModTrashDir + "/" + m_modInfo.original_name + ".jpg");
+        imgFile.rename(gamePath + GameManager::ModTrashDir + "/" + m_modInfo.original_name + ".jpg");
 
 
-        SqliteObj::getInstance()->updateModRelativePath(m_modInfo.id, ModManager::ModTrashDir);
+        SqliteObj::getInstance()->updateModRelativePath(m_modInfo.id, GameManager::ModTrashDir);
         ui->pushButton_move->setText("启用");
     }
 

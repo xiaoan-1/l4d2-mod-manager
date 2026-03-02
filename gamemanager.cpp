@@ -1,4 +1,4 @@
-#include "modmanager.h"
+#include "gamemanager.h"
 
 #include <QDir>
 #include <QFile>
@@ -8,21 +8,22 @@
 
 #include "sqliteobj.h"
 
-const QString ModManager::ModLocalDir = "/left4dead2/addons";
-const QString ModManager::WorkshopDir = "/left4dead2/addons/workshop";
-const QString ModManager::ModTrashDir = "/left4dead2/addons/trash";
+const QString GameManager::ModLocalDir = "/left4dead2/addons";
+const QString GameManager::WorkshopDir = "/left4dead2/addons/workshop";
+const QString GameManager::ModTrashDir = "/left4dead2/addons/trash";
 
-ModManager::ModManager(QObject *parent)
+GameManager::GameManager(QObject *parent)
     : QObject(parent)
 {
     // 读取游戏路径配置
     QSettings setting(QDir::currentPath() + "/config.ini", QSettings::IniFormat);
     m_gamePath = setting.value("GamePath").toString();
+    m_gameParam = setting.value("GameParam").toString();
 
     syncModInfo();
 }
 
-ModManager::~ModManager()
+GameManager::~GameManager()
 {
 
 }
@@ -32,14 +33,14 @@ ModManager::~ModManager()
 * @brief    单例对象
 * @date     2026-02-25
 **/
-ModManager *ModManager::getInstance(QObject *parent)
+GameManager *GameManager::getInstance(QObject *parent)
 {
-    static ModManager* instance = nullptr;
+    static GameManager* instance = nullptr;
     static QMutex mutex;
     if (!instance) {
         QMutexLocker locker(&mutex);
         if (!instance) {
-            instance = new ModManager(parent);
+            instance = new GameManager(parent);
         }
     }
     return instance;
@@ -50,7 +51,7 @@ ModManager *ModManager::getInstance(QObject *parent)
 * @brief    文件大小单位
 * @date     2026-02-26
 **/
-QString ModManager::getFileSizeWithUnit(const quint64 &fileSize)
+QString GameManager::getFileSizeWithUnit(const quint64 &fileSize)
 {
     const int base = 1024;
     const QStringList units = {"B", "KB", "MB", "GB", "TB", "PB"};
@@ -67,19 +68,10 @@ QString ModManager::getFileSizeWithUnit(const quint64 &fileSize)
 
 /**
 * @author   XiaoAn
-* @brief    获取游戏路径
-* @date     2026-02-25
-**/
-QString ModManager::gamePath() const
-{
-    return m_gamePath;
-}
-/**
-* @author   XiaoAn
 * @brief    设置游戏根目录
 * @date     2026-02-25
 **/
-bool ModManager::setGamePath(const QString &path)
+bool GameManager::setGamePath(const QString &path)
 {
     // 验证目录
     QDir dir(path + ModLocalDir);
@@ -104,10 +96,23 @@ bool ModManager::setGamePath(const QString &path)
 
 /**
 * @author   XiaoAn
+* @brief    设置游戏启动参数
+* @date     2026-03-02
+**/
+void GameManager::setGameParam(const QString &gameParam)
+{
+    // 第三方启动附带steam参数，通过steam启动
+    m_gameParam = gameParam;
+    QSettings setting(QDir::currentPath() + "/config.ini", QSettings::IniFormat);
+    setting.setValue("GameParam", m_gameParam);
+}
+
+/**
+* @author   XiaoAn
 * @brief    与数据库同步Mod信息
 * @date     2026-02-25
 **/
-void ModManager::syncModInfo()
+void GameManager::syncModInfo()
 {
     // 遍历数据库所有mod信息，丢弃不存在的文件mod信息
     QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList();
@@ -132,7 +137,7 @@ void ModManager::syncModInfo()
 * @brief    扫描指定路径下的mod
 * @date     2026-02-25
 **/
-QList<ModInfo> ModManager::scanDirModInfo(const QString &relativePath)
+QList<ModInfo> GameManager::scanDirModInfo(const QString &relativePath)
 {
     QDir dir(m_gamePath + relativePath);
     QStringList filter;

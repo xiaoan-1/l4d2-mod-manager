@@ -7,6 +7,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDesktopServices>
+#include <QProcess>
 #include <QDebug>
 
 #include "comp/categorydialog.h"
@@ -24,19 +25,24 @@ MainWindow::MainWindow(QWidget *parent)
     m_buttonGroup.addButton(ui->pushButton_trashMod);
     m_buttonGroup.setExclusive(true);
 
+
+    // 启动游戏
+    connect(ui->pushButton_startGame, &QPushButton::clicked, this, &MainWindow::startGame);
+
     // 设置菜单
     m_settingMenu = new QMenu(this);
     m_settingMenu->setWindowFlags(Qt::Popup);
-    m_settingMenu->addAction("设置路径", this, [=](){
+    m_settingMenu->addAction("设置游戏路径", this, [=](){
         QString gamePath = QFileDialog::getExistingDirectory(this, "选择游戏根路径", QDir::homePath(), QFileDialog::ShowDirsOnly);
-        if(gamePath.isEmpty() || !ModManager::getInstance()->setGamePath(gamePath)) return;
+        if(gamePath.isEmpty() || !GameManager::getInstance()->setGamePath(gamePath)) return;
     });
-    m_settingMenu->addAction("打开路径", this, [=](){
-        QString gamePath = ModManager::getInstance()->gamePath();
+    m_settingMenu->addAction("打开游戏路径", this, [=](){
+        QString gamePath = GameManager::getInstance()->gamePath();
         if(QDir(gamePath).exists()){
             QDesktopServices::openUrl(QUrl::fromLocalFile(gamePath));
         }
     });
+    m_settingMenu->addAction("设置启动参数", this, &MainWindow::showGameParamDilaog);;
 
     // 弹出设置菜单
     connect(ui->pushButton_setting, &QPushButton::clicked, this, [=](){
@@ -46,18 +52,9 @@ MainWindow::MainWindow(QWidget *parent)
         m_settingMenu->show();
     });
 
-    // 启动游戏
-    connect(ui->pushButton_startGame, &QPushButton::clicked, this, [=](){
-        QString gamePath = ModManager::getInstance()->gamePath();
-        if(gamePath.isEmpty()){
-            QMessageBox::warning(this, "警告", "请先设置游戏路径", QMessageBox::Ok);
-            return;
-        }
-    });
-
     // 加载工坊Mod文件信息
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
-        QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::WorkshopDir);
+        QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::WorkshopDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
         refreshModCount();
@@ -65,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 加载本地Mod文件信息
     connect(ui->pushButton_localMod, &QPushButton::clicked, this, [=](){
-        QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::ModLocalDir);
+        QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
         refreshModCount();
@@ -73,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 加载禁用Mod文件信息
     connect(ui->pushButton_trashMod, &QPushButton::clicked, this, [=](){
-        QList<ModInfo> modInfoList = ModManager::getInstance()->scanDirModInfo(ModManager::ModTrashDir);
+        QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModTrashDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
         refreshModCount();
@@ -163,8 +160,6 @@ void MainWindow::addCategoryButton(const CategoryInfo &category)
     ui->cardContainer->updateModCard();
 }
 
-
-
 /**
 * @author   XiaoAn
 * @brief    刷新Mod统计信息
@@ -180,19 +175,77 @@ void MainWindow::refreshModCount()
     int unclassifiedCount = 0, classified = 0, disabledCount = 0;
     quint64 totalOccupied = 0;
     foreach (const auto &modInfo, modInfoList) {
-        if(modInfo.relative_path == ModManager::ModTrashDir){
+        if(modInfo.relative_path == GameManager::ModTrashDir){
             disabledCount++;
         }
         QList<CategoryInfo> catList = SqliteObj::getInstance()->getModCategorys(modInfo.id);
         catList.isEmpty() ? unclassifiedCount++ : classified++;
 
-        QFile file(ModManager::getInstance()->gamePath() + modInfo.relative_path + "/" + modInfo.original_name + ".vpk");
-        if(file.exists() && modInfo.relative_path != ModManager::ModTrashDir){
+        QFile file(GameManager::getInstance()->gamePath() + modInfo.relative_path + "/" + modInfo.original_name + ".vpk");
+        if(file.exists() && modInfo.relative_path != GameManager::ModTrashDir){
             totalOccupied += file.size();
         }
     }
     ui->label_unclassified->setText(QString::number(unclassifiedCount));
     ui->label_classified->setText(QString::number(classified));
     ui->label_disabled->setText(QString::number(disabledCount));
-    ui->label_occupied->setText(ModManager::getFileSizeWithUnit(totalOccupied));
+    ui->label_occupied->setText(GameManager::getFileSizeWithUnit(totalOccupied));
+}
+
+/**
+* @author   XiaoAn
+* @brief    设置游戏启动参数
+* @date     2026-03-02
+**/
+void MainWindow::showGameParamDilaog()
+{
+    // 创建对话框
+    QDialog dialog(this);
+    dialog.setWindowTitle("输入信息");
+    dialog.setModal(true);
+    dialog.resize(300, 150);
+
+    // 创建布局
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    // 添加提示文本
+    QLabel *label = new QLabel("请输入内容：", &dialog);
+    layout->addWidget(label);
+
+    // 添加输入框
+    QLineEdit *lineEdit = new QLineEdit(&dialog);
+    lineEdit->setPlaceholderText("输入启动参数......");
+    layout->addWidget(lineEdit);
+
+    // 添加按钮
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+        Qt::Horizontal, &dialog);
+    layout->addWidget(buttonBox);
+
+    // 连接按钮信号
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString inputText = lineEdit->text();
+        GameManager::getInstance()->setGameParam(inputText);
+    }
+}
+
+/**
+* @author   XiaoAn
+* @brief    启动游戏
+* @date     2026-03-02
+**/
+void MainWindow::startGame()
+{
+    QString gameParm = GameManager::getInstance()->gameParam();
+    QString steamUrl = QString("steam://rungameid/550//%1").arg(gameParm);
+
+    bool success = QDesktopServices::openUrl(QUrl(steamUrl));
+
+    if(!success){
+        QMessageBox::warning(this, "错误", "启动失败!", QMessageBox::Ok);
+    }
 }

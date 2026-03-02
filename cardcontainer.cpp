@@ -1,7 +1,7 @@
 #include "cardcontainer.h"
 #include "ui_cardcontainer.h"
 
-#include "modmanager.h"
+#include "gamemanager.h"
 
 CardContainer::CardContainer(QWidget *parent)
     : QWidget(parent)
@@ -44,7 +44,7 @@ void CardContainer::updateModCard()
 **/
 void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const CategoryInfo &category)
 {
-    QString gamePath = ModManager::getInstance()->gamePath();
+    QString gamePath = GameManager::getInstance()->gamePath();
     foreach (const ModInfo &modInfo, modInfoList) {
         ModCard *modCard = new ModCard(modInfo, ui->centralwidget);
         modCard->setCurrentCategory(category);
