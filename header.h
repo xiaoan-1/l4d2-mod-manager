@@ -7,11 +7,12 @@
 // 分类信息结构体
 struct CategoryInfo
 {
-    int id = -1;                // 唯一标识
+    int id;                     // 唯一标识
     int sort;                   // 排序序号
     QString name;               // 分类名称
     QDateTime create_time;      // 创建时间
 
+    CategoryInfo() : id(-1){}
 
     bool operator==(const CategoryInfo& other) const {
         return this->id == other.id;

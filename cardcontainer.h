@@ -18,6 +18,9 @@ public:
     explicit CardContainer(QWidget *parent = nullptr);
     ~CardContainer();
 
+    // 刷新Mod卡片信息
+    void updateModCard();
+
     // 添加Mod卡片
     void appendModCard(const ModInfo &modInfo, const CategoryInfo &category = CategoryInfo());
     void appendModCard(const QList<ModInfo> &modInfoList, const CategoryInfo &category = CategoryInfo());
@@ -38,8 +41,10 @@ public:
     // 设置边距
     void setContentsMargins(int left, int top, int right, int bottom);
 
-public slots:
+public slots:    
     void slot_searchCard(const QString &name);
+
+    void slot_disabledAll();
 
 private:
     // 刷新布局

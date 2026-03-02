@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1168</width>
-    <height>877</height>
+    <width>1261</width>
+    <height>882</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -70,8 +70,8 @@ QScrollArea{border: 0px; background-color: transparent;}
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>909</width>
-         <height>655</height>
+         <width>1002</width>
+         <height>660</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -511,7 +511,7 @@ font-weight: bold;</string>
             <x>0</x>
             <y>0</y>
             <width>178</width>
-            <height>524</height>
+            <height>529</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -597,6 +597,12 @@ font-weight: bold;</string>
        </item>
        <item>
         <widget class="QLineEdit" name="lineEdit_search">
+         <property name="maximumSize">
+          <size>
+           <width>200</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -606,7 +612,7 @@ font-weight: bold;</string>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_8">
+        <spacer name="horizontalSpacer_10">
          <property name="orientation">
           <enum>Qt::Orientation::Horizontal</enum>
          </property>

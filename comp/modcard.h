@@ -2,6 +2,8 @@
 #define MODCARD_H
 
 #include <QWidget>
+#include <QCheckBox>
+#include <QPushButton>
 
 #include "../header.h"
 
@@ -26,16 +28,28 @@ public:
 
     // 加载图片
     void loadImage(const QImage &image);
+
+    // 刷新
+    void updateModInfo();
+
+    // 设置可选性
+    void setCheckable(bool checkable);
+
+    // 获取可选性
+    bool checkable() const;
+
+    // 获取选中状态
+    bool isChecked() const;
 private:
 
     // 备注
-    void remarkMod();
+    void remark();
 
-    // 移动Mod
-    void moveMod();
+    // 转移
+    void transfer();
 
     // 分类
-    void classifyMod();
+    void classify();
 
 protected:
     void hideEvent(QHideEvent* event) override;
@@ -50,6 +64,9 @@ signals:
     void destroyCard(const int &modId);
 private:
     Ui::ModCard *ui;
+
+    // 单选框
+    QCheckBox *m_checkBox;
 
     // Mod文件信息
     ModInfo m_modInfo;

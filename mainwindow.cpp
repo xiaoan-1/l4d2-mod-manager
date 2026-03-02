@@ -101,8 +101,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-
-    // 搜索
+    // 搜索Mod
     connect(ui->lineEdit_search, &QLineEdit::textChanged, ui->cardContainer, &CardContainer::slot_searchCard);
 
     // 默认刷新
@@ -132,7 +131,7 @@ void MainWindow::addCategoryButton(const CategoryInfo &category)
         // 查询该分类的Mod信息
         QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList(category.id);
         ui->cardContainer->clearModCard();
-        ui->cardContainer->appendModCard(modInfoList);
+        ui->cardContainer->appendModCard(modInfoList, category);
     });
 
     connect(btn, &CategoryButton::deleteCategory, this, [=](){
@@ -159,6 +158,9 @@ void MainWindow::addCategoryButton(const CategoryInfo &category)
             QMessageBox::warning(this, "错误", "删除失败!", QMessageBox::Ok);
         }
     });
+
+    // 刷新Mod卡片信息, 增加分类选项
+    ui->cardContainer->updateModCard();
 }
 
 

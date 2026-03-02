@@ -28,9 +28,6 @@ private:
     // 添加分类按钮
     void addCategoryButton(const CategoryInfo &category);
 
-    // 刷新Mod卡片列表
-    // void refreshModCards(const QList<ModInfo> &modInfoList, const CategoryInfo &category = CategoryInfo());
-
     // 刷新Mod统计信息
     void refreshModCount();
 
@@ -42,7 +39,5 @@ private:
 
     // 互斥选择按钮
     QButtonGroup m_buttonGroup;
-
-    QList<ModCard*> m_modCardList;
 };
 #endif // MAINWINDOW_H

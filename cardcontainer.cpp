@@ -26,6 +26,19 @@ CardContainer::~CardContainer()
 
 /**
 * @author   XiaoAn
+* @brief    刷新Mod卡片信息
+* @date     2026-03-02
+**/
+void CardContainer::updateModCard()
+{
+    // 更新卡片
+    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
+        it.value()->updateModInfo();
+    }
+}
+
+/**
+* @author   XiaoAn
 * @brief    添加多个Mod卡片
 * @date     2026-02-28
 **/
@@ -75,8 +88,8 @@ void CardContainer::clearModCard()
     m_imageLoader->cancelAllTasks();
 
     // 删除卡片
-    foreach (ModCard *modCard, m_modCardMap.values()) {
-        modCard->deleteLater();
+    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
+        it.value()->deleteLater();
     }
     m_modCardMap.clear();
 }
@@ -88,8 +101,8 @@ void CardContainer::clearModCard()
 **/
 void CardContainer::setCardFixedSize(const QSize &size)
 {
-    foreach (const auto &card, m_modCardMap.values()) {
-        card->setFixedSize(size);
+    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
+        it.value()->setFixedSize(size);
     }
 
     updateLayout();
@@ -154,8 +167,8 @@ void CardContainer::slot_searchCard(const QString &name)
 {
     if(name.isEmpty()){
         // 全显示
-        foreach (ModCard *modCard, m_modCardMap.values()) {
-            modCard->setVisible(true);
+        for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
+            it.value()->setVisible(true);
         }
     }
 
@@ -170,6 +183,19 @@ void CardContainer::slot_searchCard(const QString &name)
         }
     }
 }
+
+/**
+* @author   XiaoAn
+* @brief    禁用所有Mod
+* @date     2026-03-02
+**/
+void CardContainer::slot_disabledAll()
+{
+
+}
+
+
+
 
 /**
 * @author   XiaoAn

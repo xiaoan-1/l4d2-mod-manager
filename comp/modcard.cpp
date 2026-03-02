@@ -29,59 +29,21 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
     : ModCard(parent)
 {
     m_modInfo = modInfo;
+    updateModInfo();
 
-    // 备注名称
-    if(modInfo.custom_name.isEmpty()){
-        ui->label_name->setText(modInfo.original_name);
-    }else{
-        ui->label_name->setText(modInfo.custom_name);
-    }
+    // 备注
+    connect(ui->pushButton_remark, &QPushButton::clicked, this, &ModCard::remark);
 
-    QString baseDir = ModManager::getInstance()->gamePath() + modInfo.relative_path;
+    // 转移
+    connect(ui->pushButton_move, &QPushButton::clicked, this, &ModCard::transfer);
 
-    // 文件大小
-    QFile modFile(baseDir + "/" + modInfo.original_name + ".vpk");
-    if(modFile.exists()){
-        QString sizeStr = ModManager::getFileSizeWithUnit(modFile.size());
-        ui->label_size->setText(sizeStr);
-    }else {
-        ui->label_size->setText("0kb");
-    }
+    // 分类
+    connect(ui->pushButton_affirm, &QPushButton::clicked, this, &ModCard::classify);
 
-
-    // 获取所有分类列表
-    m_categoryList = SqliteObj::getInstance()->getCategoryList();
-    // 获取当前Mod的分类列表
-    QList<CategoryInfo> modCategoryList = SqliteObj::getInstance()->getModCategorys(modInfo.id);
-    foreach (const auto &modCategory, modCategoryList) {
-        foreach (const auto &category, m_categoryList) {
-            if(category == modCategory){
-                m_categoryList.removeOne(category);
-                break;
-            }
-        }
-    }
-
-    // 添加到下拉框中
-    foreach (const auto &category, m_categoryList) {
-        ui->comboBox_categorys->addItem(category.name);
-    }
-
-    // 备注信息
-    connect(ui->pushButton_remark, &QPushButton::clicked, this, &ModCard::remarkMod);
-
-
-    if(modInfo.relative_path == ModManager::ModTrashDir){
-        ui->pushButton_move->setText("启用");
-    }else{
-        ui->pushButton_move->setText("禁用");
-    }
-    // 禁用
-    connect(ui->pushButton_move, &QPushButton::clicked, this, &ModCard::moveMod);
-
-    // 确认设置分类
-    connect(ui->pushButton_affirm, &QPushButton::clicked, this, &ModCard::classifyMod);
-
+    // 可选性
+    m_checkBox = new QCheckBox(this);
+    m_checkBox->move(0, 0);
+    m_checkBox->hide();
 }
 
 /**
@@ -105,18 +67,20 @@ void ModCard::setCurrentCategory(const CategoryInfo &category)
         return;
     }
     m_category = category;
-    QPushButton *categoryDelBtn = new QPushButton("移除分类",this);
 
+    // 可移除分类
+    QPushButton *categoryDelBtn = new QPushButton("移除分类",this);
+    categoryDelBtn->move(width() - categoryDelBtn->width(), 0);
     connect(categoryDelBtn, &QPushButton::clicked, this, [=](){
         bool ret = SqliteObj::getInstance()->removeModCategory(m_modInfo.id, category.id);
         if(ret){
             // 由父容器来销毁
             emit destroyCard(m_modInfo.id);
-            qDebug() << "由父窗口销毁";
         }else{
             QMessageBox::warning(this, "错误", "移除分类失败！", QMessageBox::Ok);
         }
     });
+    categoryDelBtn->show();
 }
 
 /**
@@ -135,10 +99,94 @@ void ModCard::loadImage(const QImage &image)
 
 /**
 * @author   XiaoAn
-* @brief    给Mod备注
+* @brief    刷新Mod信息
+* @date     2026-03-02
+**/
+void ModCard::updateModInfo()
+{
+    // 备注名称
+    if(m_modInfo.custom_name.isEmpty()){
+        ui->label_name->setText(m_modInfo.original_name);
+    }else{
+        ui->label_name->setText(m_modInfo.custom_name);
+    }
+
+    QString baseDir = ModManager::getInstance()->gamePath() + m_modInfo.relative_path;
+
+    // 文件大小
+    QFile modFile(baseDir + "/" + m_modInfo.original_name + ".vpk");
+    if(modFile.exists()){
+        QString sizeStr = ModManager::getFileSizeWithUnit(modFile.size());
+        ui->label_size->setText(sizeStr);
+    }else {
+        ui->label_size->setText("0kb");
+    }
+
+
+    // 获取所有分类列表
+    m_categoryList = SqliteObj::getInstance()->getCategoryList();
+    // 获取当前Mod的分类列表
+    QList<CategoryInfo> modCategoryList = SqliteObj::getInstance()->getModCategorys(m_modInfo.id);
+    foreach (const auto &modCategory, modCategoryList) {
+        foreach (const auto &category, m_categoryList) {
+            if(category == modCategory){
+                m_categoryList.removeOne(category);
+                break;
+            }
+        }
+    }
+
+    // 添加到下拉框中
+    ui->comboBox_categorys->clear();
+    foreach (const auto &category, m_categoryList) {
+        ui->comboBox_categorys->addItem(category.name);
+    }
+
+    if(m_modInfo.relative_path == ModManager::ModTrashDir){
+        ui->pushButton_move->setText("启用");
+    }else{
+        ui->pushButton_move->setText("禁用");
+    }
+}
+
+/**
+* @author   XiaoAn
+* @brief    设置可选性
+* @date     2026-03-02
+**/
+void ModCard::setCheckable(bool checkable)
+{
+    m_checkBox->setChecked(false);
+    m_checkBox->setCheckable(checkable);
+    m_checkBox->setVisible(checkable);
+}
+
+/**
+* @author   XiaoAn
+* @brief    获取可选性
+* @date     2026-03-02
+**/
+bool ModCard::checkable() const
+{
+    return m_checkBox->isCheckable();
+}
+
+/**
+* @author   XiaoAn
+* @brief    获取选中状态
+* @date     2026-03-02
+**/
+bool ModCard::isChecked() const
+{
+    return m_checkBox->isChecked();
+}
+
+/**
+* @author   XiaoAn
+* @brief    备注
 * @date     2026-02-27
 **/
-void ModCard::remarkMod()
+void ModCard::remark()
 {
     QWidget *w = ui->gridLayout->itemAtPosition(0, 0)->widget();
 
@@ -172,10 +220,10 @@ void ModCard::remarkMod()
 
 /**
 * @author   XiaoAn
-* @brief    移动Mod
+* @brief    移动
 * @date     2026-02-27
 **/
-void ModCard::moveMod()
+void ModCard::transfer()
 {
     QString gamePath = ModManager::getInstance()->gamePath();
     if(m_modInfo.relative_path == ModManager::ModTrashDir){
@@ -209,19 +257,21 @@ void ModCard::moveMod()
 
 /**
 * @author   XiaoAn
-* @brief    对该Mod进行分类
+* @brief    分类
 * @date     2026-02-26
 **/
-void ModCard::classifyMod()
+void ModCard::classify()
 {
     int categoryIdx = ui->comboBox_categorys->currentIndex();
-
-    bool ret = SqliteObj::getInstance()->setModCategory(m_modInfo.id, m_categoryList.at(categoryIdx).id);
+    int categoryId = m_categoryList.at(categoryIdx).id;
+    bool ret = SqliteObj::getInstance()->setModCategory(m_modInfo.id, categoryId);
 
     if(!ret){
         QMessageBox::warning(this, "错误", "分类设置失败!", QMessageBox::Ok);
     }else {
         QMessageBox::information(this, "提示", "分类设置成功!", QMessageBox::Ok);
+        // 同步删除分类
+        m_categoryList.removeAt(categoryIdx);
         ui->comboBox_categorys->removeItem(categoryIdx);
     }
 }
@@ -233,10 +283,8 @@ void ModCard::classifyMod()
 **/
 void ModCard::hideEvent(QHideEvent *event)
 {
-    {
-        QWidget::hideEvent(event);
-        emit visiableChanged(false); // 发射隐藏状态改变信号
-    }
+    QWidget::hideEvent(event);
+    emit visiableChanged(false);
 }
 
 /**
@@ -246,9 +294,7 @@ void ModCard::hideEvent(QHideEvent *event)
 **/
 void ModCard::showEvent(QShowEvent *event)
 {
-    {
-        QWidget::showEvent(event);
-        emit visiableChanged(true); // 发射显示状态改变信号
-    }
+    QWidget::showEvent(event);
+    emit visiableChanged(true);
 }
 
