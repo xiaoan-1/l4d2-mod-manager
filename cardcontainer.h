@@ -31,6 +31,9 @@ public:
     // 清空Mod卡片
     void clearModCard();
 
+    // 筛选卡片
+    void filterCard(const QString &catName, bool isShow);
+
     // 设置卡片大小
     void setCardFixedSize(const QSize& size);
     // 设置卡片之间的间距

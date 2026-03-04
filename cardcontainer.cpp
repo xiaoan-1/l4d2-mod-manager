@@ -96,6 +96,21 @@ void CardContainer::clearModCard()
 
 /**
 * @author   XiaoAn
+* @brief    筛选卡片
+* @date     2026-03-04
+**/
+void CardContainer::filterCard(const QString &catName, bool isShow)
+{
+    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
+        ModCard *modCard = it.value();
+        if(modCard->hasCategory(catName)){
+            modCard->setVisible(isShow);
+        }
+    }
+}
+
+/**
+* @author   XiaoAn
 * @brief    设置卡片大小
 * @date     2026-03-01
 **/
@@ -193,9 +208,6 @@ void CardContainer::slot_disabledAll()
 {
 
 }
-
-
-
 
 /**
 * @author   XiaoAn

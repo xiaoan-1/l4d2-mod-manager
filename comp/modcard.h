@@ -40,8 +40,11 @@ public:
 
     // 获取选中状态
     bool isChecked() const;
-private:
 
+    // 是否存在分类
+    bool hasCategory(const QString &catName);
+
+private:
     // 备注
     void remark();
 
@@ -74,8 +77,11 @@ private:
     // 当前分类
     CategoryInfo m_category;
 
-    // 分类列表
+    // 所有分类信息
     QList<CategoryInfo> m_categoryList;
+
+    // 已分类的分类信息
+    QList<CategoryInfo> m_classifiedList;
 };
 
 #endif // MODCARD_H

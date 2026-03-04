@@ -25,10 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_buttonGroup.addButton(ui->pushButton_trashMod);
     m_buttonGroup.setExclusive(true);
 
-
-    // 启动游戏
-    connect(ui->pushButton_startGame, &QPushButton::clicked, this, &MainWindow::startGame);
-
     // 设置菜单
     m_settingMenu = new QMenu(this);
     m_settingMenu->setWindowFlags(Qt::Popup);
@@ -43,6 +39,15 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
     m_settingMenu->addAction("设置启动参数", this, &MainWindow::showGameParamDilaog);;
+
+    // 筛选面板
+    m_ckListWidget = new CheckBoxListWidget(this);
+    connect(m_ckListWidget, &CheckBoxListWidget::optionCheckStateChanged, this, [=](QString categoryName, bool checked){
+        ui->cardContainer->filterCard(categoryName, checked);
+    });
+
+    // 启动游戏
+    connect(ui->pushButton_startGame, &QPushButton::clicked, this, &MainWindow::startGame);
 
     // 弹出设置菜单
     connect(ui->pushButton_setting, &QPushButton::clicked, this, [=](){
@@ -76,11 +81,10 @@ MainWindow::MainWindow(QWidget *parent)
         refreshModCount();
     });
 
-
     // 添加自定义分类到导航栏
     QList<CategoryInfo> categoryList = SqliteObj::getInstance()->getCategoryList();
     foreach (const auto &category, categoryList) {
-        addCategoryButton(category);
+        addCategory(category);
     }
 
     // 手动添加自定义分类
@@ -94,12 +98,20 @@ MainWindow::MainWindow(QWidget *parent)
                 QMessageBox::warning(this, "错误", "分类添加失败！", QMessageBox::Ok);
                 return;
             }
-            addCategoryButton(SqliteObj::getInstance()->getCategoryInfo(categoryName));
+            addCategory(SqliteObj::getInstance()->getCategoryInfo(categoryName));
         }
     });
 
     // 搜索Mod
     connect(ui->lineEdit_search, &QLineEdit::textChanged, ui->cardContainer, &CardContainer::slot_searchCard);
+
+    // 打开筛选面板
+    connect(ui->pushButton_categoryFilter, &QPushButton::clicked, this, [=](){
+        // 获取按钮在屏幕上的绝对位置
+        QPoint globalBtnPos = ui->pushButton_categoryFilter->mapToGlobal(QPoint(0, 0));
+        m_ckListWidget->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_categoryFilter->height());
+        m_ckListWidget->show();
+    });
 
     // 默认刷新
     emit ui->pushButton_workshop->clicked();
@@ -112,12 +124,12 @@ MainWindow::~MainWindow()
 
 /**
 * @author   XiaoAn
-* @brief    添加分类按钮
+* @brief    添加分类信息
 * @date     2026-02-26
 **/
-void MainWindow::addCategoryButton(const CategoryInfo &category)
+void MainWindow::addCategory(const CategoryInfo &category)
 {
-    // 插入成功，动态生成分类按钮
+    // 1、生成分类按钮
     CategoryButton *btn = new CategoryButton(category.name, this);
     m_buttonGroup.addButton(btn->coreButton());
     QVBoxLayout *vboxLayout = qobject_cast<QVBoxLayout*>(ui->categoryList->layout());
@@ -147,6 +159,8 @@ void MainWindow::addCategoryButton(const CategoryInfo &category)
         if(ret){
             // 移除按钮
             m_buttonGroup.removeButton(btn->coreButton());
+            // 移除分类筛选中的分类
+            m_ckListWidget->removeOption(category.name);
             btn->deleteLater();
 
             // 默认刷新
@@ -156,7 +170,10 @@ void MainWindow::addCategoryButton(const CategoryInfo &category)
         }
     });
 
-    // 刷新Mod卡片信息, 增加分类选项
+    // 2、同步添加筛选项
+    m_ckListWidget->addOption(category.name);
+
+    // 3、刷新Mod卡片信息, 增加分类选项
     ui->cardContainer->updateModCard();
 }
 

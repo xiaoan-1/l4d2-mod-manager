@@ -9,6 +9,7 @@
 #include "gamemanager.h"
 #include "comp/modcard.h"
 #include "cardcontainer.h"
+#include "comp/checkboxlistwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,8 +26,8 @@ public:
     ~MainWindow();
 
 private:
-    // 添加分类按钮
-    void addCategoryButton(const CategoryInfo &category);
+    // 添加分类信息
+    void addCategory(const CategoryInfo &category);
 
     // 刷新Mod统计信息
     void refreshModCount();
@@ -42,6 +43,9 @@ private:
 
     // 设置菜单
     QMenu *m_settingMenu;
+
+    // 分类筛选列表
+    CheckBoxListWidget *m_ckListWidget;
 
     // 互斥选择按钮
     QButtonGroup m_buttonGroup;

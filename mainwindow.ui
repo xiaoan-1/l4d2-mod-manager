@@ -612,6 +612,13 @@ font-weight: bold;</string>
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton_categoryFilter">
+         <property name="text">
+          <string>分类筛选</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_10">
          <property name="orientation">
           <enum>Qt::Orientation::Horizontal</enum>

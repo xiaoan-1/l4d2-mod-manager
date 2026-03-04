@@ -126,20 +126,15 @@ void ModCard::updateModInfo()
     // 获取所有分类列表
     m_categoryList = SqliteObj::getInstance()->getCategoryList();
     // 获取当前Mod的分类列表
-    QList<CategoryInfo> modCategoryList = SqliteObj::getInstance()->getModCategorys(m_modInfo.id);
-    foreach (const auto &modCategory, modCategoryList) {
-        foreach (const auto &category, m_categoryList) {
-            if(category == modCategory){
-                m_categoryList.removeOne(category);
-                break;
-            }
-        }
-    }
+    m_classifiedList = SqliteObj::getInstance()->getModCategorys(m_modInfo.id);
 
-    // 添加到下拉框中
+
+    // 添加该Mod未分类信息到下拉框中
     ui->comboBox_categorys->clear();
     foreach (const auto &category, m_categoryList) {
-        ui->comboBox_categorys->addItem(category.name);
+        if(!hasCategory(category.name)){
+            ui->comboBox_categorys->addItem(category.name);
+        }
     }
 
     if(m_modInfo.relative_path == GameManager::ModTrashDir){
@@ -179,6 +174,21 @@ bool ModCard::checkable() const
 bool ModCard::isChecked() const
 {
     return m_checkBox->isChecked();
+}
+
+/**
+* @author   XiaoAn
+* @brief    是否存在分类
+* @date     2026-03-04
+**/
+bool ModCard::hasCategory(const QString &catName)
+{
+    foreach (const auto &category, m_classifiedList) {
+        if(category.name == catName){
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
