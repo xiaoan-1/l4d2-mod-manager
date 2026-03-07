@@ -236,28 +236,33 @@ void ModCard::remark()
 void ModCard::transfer()
 {
     QString gamePath = GameManager::getInstance()->gamePath();
+
+    QString destRelativePath, btnText;
     if(m_modInfo.relative_path == GameManager::ModTrashDir){
-        // 移回本地
-        QFile modFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".vpk");
-        modFile.rename(gamePath + GameManager::ModLocalDir + "/" + m_modInfo.original_name + ".vpk");
-
-        QFile imgFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".jpg");
-        imgFile.rename(gamePath + GameManager::ModLocalDir + "/" + m_modInfo.original_name + ".jpg");
-
-        // 修改记录
-        SqliteObj::getInstance()->updateModRelativePath(m_modInfo.id, GameManager::ModLocalDir);
-        ui->pushButton_move->setText("禁用");
+        btnText = "禁用";
+        destRelativePath = GameManager::ModLocalDir;
     }else{
-        // 移到回收站
-        QFile modFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".vpk");
-        modFile.rename(gamePath + GameManager::ModTrashDir + "/" + m_modInfo.original_name + ".vpk");
+        btnText = "启用";
+        destRelativePath = GameManager::ModTrashDir;
+    }
 
-        QFile imgFile(gamePath + m_modInfo.relative_path + "/" + m_modInfo.original_name + ".jpg");
-        imgFile.rename(gamePath + GameManager::ModTrashDir + "/" + m_modInfo.original_name + ".jpg");
+    QString sourFilePath = QString("%1/%2/%3").arg(gamePath).arg(m_modInfo.relative_path).arg(m_modInfo.original_name);
+    QString destFilePath = QString("%1/%2/%3").arg(gamePath).arg(destRelativePath).arg(m_modInfo.original_name);
+    QFile::rename(sourFilePath + ".jpg", destFilePath + ".jpg");
 
-
-        SqliteObj::getInstance()->updateModRelativePath(m_modInfo.id, GameManager::ModTrashDir);
-        ui->pushButton_move->setText("启用");
+    if(QFile::rename(sourFilePath + ".vpk", destFilePath + ".vpk")){
+        // 修改记录
+        if(SqliteObj::getInstance()->updateModRelativePath(m_modInfo.id, destRelativePath)){
+            m_modInfo.relative_path = destRelativePath;
+            ui->pushButton_move->setText(btnText);
+        }else{
+            // 移回回收文件夹
+            QFile::rename(destFilePath + ".vpk", sourFilePath + ".vpk");
+            QFile::rename(destFilePath + ".vpk", sourFilePath + ".vpk");
+            QMessageBox::warning(this, "错误", "数据库修改路径失败，文件已还原位置", QMessageBox::Ok);
+        }
+    }else{
+        QMessageBox::warning(this, "错误", "文件移动失败，可能存在同名文件", QMessageBox::Ok);
     }
 
     if(m_category.id == -1){
