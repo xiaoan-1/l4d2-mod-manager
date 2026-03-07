@@ -280,6 +280,7 @@ void ModCard::classify()
         QMessageBox::warning(this, "错误", "分类设置失败!", QMessageBox::Ok);
     }else {
         QMessageBox::information(this, "提示", "分类设置成功!", QMessageBox::Ok);
+        emit classified(m_categoryList.at(categoryIdx).name);
         // 同步删除分类
         m_categoryList.removeAt(categoryIdx);
         ui->comboBox_categorys->removeItem(categoryIdx);

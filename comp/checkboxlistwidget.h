@@ -32,18 +32,13 @@ public:
 
 signals:
     // 选项选中状态变化
-    void checkStateChanged(const QMap<QString, bool> &optionCheckedState);
-
     void optionCheckStateChanged(const QString &option, const bool &checked);
 
 private:
     Ui::CheckBoxListWidget *ui;
 
     // 控件列表
-    QList<QWidget* > m_widgetList;
-
-    // 选项选中状态
-    QMap<QString, QCheckBox*> m_options;
+    QList<QCheckBox* > m_checkBoxList;
 };
 
 #endif // CHECKBOXLISTWIDGET_H

@@ -46,6 +46,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         cardcontainer.h cardcontainer.cpp cardcontainer.ui
         comp/imageloader.h comp/imageloader.cpp
         comp/checkboxlistwidget.h comp/checkboxlistwidget.cpp comp/checkboxlistwidget.ui
+        README.md
 
     )
 # Define target properties for Android with Qt 6 as:

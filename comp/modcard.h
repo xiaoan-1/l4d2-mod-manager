@@ -65,6 +65,9 @@ signals:
 
     // 销毁信号
     void destroyCard(const int &modId);
+
+    // 分类信号
+    void classified(const QString &cat);
 private:
     Ui::ModCard *ui;
 

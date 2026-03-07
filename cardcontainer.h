@@ -22,7 +22,6 @@ public:
     void updateModCard();
 
     // 添加Mod卡片
-    void appendModCard(const ModInfo &modInfo, const CategoryInfo &category = CategoryInfo());
     void appendModCard(const QList<ModInfo> &modInfoList, const CategoryInfo &category = CategoryInfo());
 
     // 移除Mod卡片
@@ -62,7 +61,12 @@ protected:
 private:
     Ui::CardContainer *ui;
 
+    // Mod卡片控件
     QMap<int, ModCard*> m_modCardMap;
+
+    // 分类筛选过滤
+    QMap<QString, bool> m_categoryFilter;
+
     // 图片加载器
     ImageLoader* m_imageLoader;
 

@@ -12,8 +12,12 @@ CheckBoxListWidget::CheckBoxListWidget(QWidget *parent)
     hide();
     setWindowFlags(Qt::Popup);
 
-    connect(ui->pushButton_reset, &QPushButton::clicked, this, [=](){
+    connect(ui->pushButton_selectAll, &QPushButton::clicked, this, [=](){
         resetOptionsChecked(true);
+    });
+
+    connect(ui->pushButton_cancelAll, &QPushButton::clicked, this, [=](){
+        resetOptionsChecked(false);
     });
 }
 
@@ -31,28 +35,15 @@ void CheckBoxListWidget::addOption(const QString &option)
 {
     QVBoxLayout *vboxLayout = qobject_cast<QVBoxLayout*>(ui->scrollWidget->layout());
 
-    // 创建容器
-    QWidget *w = new QWidget();
-    QHBoxLayout *hLayout = new QHBoxLayout();
-    w->setProperty("option", option);
-    m_widgetList.append(w);
-    w->setLayout(hLayout);
-
-    QLabel *label = new QLabel(option);
-    label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
-
-    QCheckBox *checkBox = new QCheckBox();
+    QCheckBox *checkBox = new QCheckBox(option);
     checkBox->setChecked(true);
     connect(checkBox, &QCheckBox::checkStateChanged, this, [=](bool checked){
         optionCheckStateChanged(option, checked);
     });
 
-    m_options.insert(option, checkBox);
+    m_checkBoxList.append(checkBox);
 
-    hLayout->addWidget(label);
-    hLayout->addWidget(checkBox);
-
-    vboxLayout->insertWidget(vboxLayout->count() - 1, w);
+    vboxLayout->insertWidget(vboxLayout->count() - 1, checkBox);
 }
 
 /**
@@ -74,10 +65,10 @@ void CheckBoxListWidget::addOptions(const QStringList &options)
 **/
 void CheckBoxListWidget::removeOption(const QString &option)
 {
-    foreach (QWidget *w, m_widgetList) {
-        if(w->property("option") == option){
-            w->deleteLater();
-            m_widgetList.removeAll(w);
+    foreach (QCheckBox *checkbox, m_checkBoxList) {
+        if(checkbox->text()== option){
+            checkbox->deleteLater();
+            m_checkBoxList.removeOne(checkbox);
             break;
         }
     }
@@ -89,10 +80,11 @@ void CheckBoxListWidget::removeOption(const QString &option)
 * @date     2026-03-04
 **/
 void CheckBoxListWidget::setOptionChecked(const QString &option, const bool &checked)
-{   
-    for (auto it = m_options.begin(); it != m_options.end(); ++it) {
-        if(it.key() == option){
-            it.value()->setChecked(checked);
+{
+    foreach (QCheckBox *checkbox, m_checkBoxList) {
+        if(checkbox->text()== option){
+            checkbox->setChecked(checked);
+            break;
         }
     }
 }
@@ -104,7 +96,7 @@ void CheckBoxListWidget::setOptionChecked(const QString &option, const bool &che
 **/
 void CheckBoxListWidget::resetOptionsChecked(const bool &checked)
 {
-    for (auto it = m_options.begin(); it != m_options.end(); ++it) {
-        it.value()->setChecked(checked);
+    foreach (QCheckBox *checkbox, m_checkBoxList) {
+        checkbox->setChecked(checked);
     }
 }

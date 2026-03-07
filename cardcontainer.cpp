@@ -33,7 +33,16 @@ void CardContainer::updateModCard()
 {
     // 更新卡片
     for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
-        it.value()->updateModInfo();
+        ModCard *modCard = it.value();
+        modCard->updateModInfo();
+
+        // 根据分类过滤决定Mod卡片的显示与隐藏
+        for (auto cat = m_categoryFilter.begin(); cat != m_categoryFilter.end(); ++cat) {
+            if(modCard->hasCategory(cat.key())){
+                modCard->setVisible(cat.value());
+                break;
+            }
+        }
     }
 }
 
@@ -53,6 +62,8 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
         // 卡片销毁或者隐藏时触发布局更新
         connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
         connect(modCard, &ModCard::visiableChanged, this, &CardContainer::updateLayout);
+        // Mod分类发生变化触发更新
+        connect(modCard, &ModCard::classified, this, &CardContainer::updateModCard);
         // 提交Mod卡片图片加载任务
         ImageLoader::Task task;
         task.id = modInfo.id;
@@ -60,7 +71,6 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
         task.targetSize = QSize(300, 200);
         m_imageLoader->addTask(task);
     }
-
     // 更新布局
     updateLayout();
 }
@@ -101,12 +111,13 @@ void CardContainer::clearModCard()
 **/
 void CardContainer::filterCard(const QString &catName, bool isShow)
 {
-    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
-        ModCard *modCard = it.value();
-        if(modCard->hasCategory(catName)){
-            modCard->setVisible(isShow);
-        }
+    if(m_categoryFilter.contains(catName)){
+        m_categoryFilter[catName] = isShow;
+    }else {
+        m_categoryFilter.insert(catName, isShow);
     }
+
+    updateModCard();
 }
 
 /**

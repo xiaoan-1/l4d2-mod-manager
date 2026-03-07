@@ -62,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::WorkshopDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
+        // 重置过滤
+        m_ckListWidget->resetOptionsChecked(true);
         refreshModCount();
     });
 
@@ -70,6 +72,8 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
+        // 重置过滤
+        m_ckListWidget->resetOptionsChecked(true);
         refreshModCount();
     });
 
@@ -78,6 +82,8 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModTrashDir);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList);
+        // 重置过滤
+        m_ckListWidget->resetOptionsChecked(true);
         refreshModCount();
     });
 
@@ -141,6 +147,9 @@ void MainWindow::addCategory(const CategoryInfo &category)
         QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList(category.id);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList, category);
+        // 重置过滤
+        m_ckListWidget->resetOptionsChecked(true);
+        refreshModCount();
     });
 
     connect(btn, &CategoryButton::deleteCategory, this, [=](){
