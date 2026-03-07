@@ -49,6 +49,11 @@ MainWindow::MainWindow(QWidget *parent)
     // 启动游戏
     connect(ui->pushButton_startGame, &QPushButton::clicked, this, &MainWindow::startGame);
 
+    // 打开创意工坊网页
+    connect(ui->pushButton_openworkshop, &QPushButton::clicked, this, [=](){
+        QDesktopServices::openUrl(QUrl("https://steamcommunity.com/app/550/workshop/"));
+    });
+
     // 弹出设置菜单
     connect(ui->pushButton_setting, &QPushButton::clicked, this, [=](){
         // 获取按钮在屏幕上的绝对位置
@@ -107,6 +112,9 @@ MainWindow::MainWindow(QWidget *parent)
             addCategory(SqliteObj::getInstance()->getCategoryInfo(categoryName));
         }
     });
+
+    // 自动整理mod
+    connect(ui->pushButton_autoOrganize, &QPushButton::clicked, this, &MainWindow::autoOrganizeMod);
 
     // 搜索Mod
     connect(ui->lineEdit_search, &QLineEdit::textChanged, ui->cardContainer, &CardContainer::slot_searchCard);
@@ -274,4 +282,32 @@ void MainWindow::startGame()
     if(!success){
         QMessageBox::warning(this, "错误", "启动失败!", QMessageBox::Ok);
     }
+}
+
+/**
+* @author   XiaoAn
+* @brief    自动整理Mod
+* @date     2026-03-07
+**/
+void MainWindow::autoOrganizeMod()
+{
+    QString gamePath = GameManager::getInstance()->gamePath();
+
+    QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList();
+    foreach (const ModInfo &modInfo, modInfoList) {
+        // 工坊的Mod移入本地目录
+        if(modInfo.relative_path == GameManager::WorkshopDir){
+            QString sourFilePath = QString("%1/%2/%3").arg(gamePath).arg(modInfo.relative_path).arg(modInfo.original_name);
+            QString destFilePath = QString("%1/%2/%3").arg(gamePath).arg(GameManager::ModLocalDir).arg(modInfo.original_name);
+            QFile::rename(sourFilePath + ".jpg", destFilePath + ".jpg");
+            if(QFile::rename(sourFilePath + ".vpk", destFilePath + ".vpk")){
+                if(!SqliteObj::getInstance()->updateModRelativePath(modInfo.id, GameManager::ModLocalDir)){
+                    // 数据修改失败，则移回文件
+                    QFile::rename(destFilePath + ".vpk", sourFilePath + ".vpk");
+                    QFile::rename(destFilePath + ".jpg", sourFilePath + ".jpg");
+                }
+            }
+        }
+    }
+    QMessageBox::information(this, "提示", "已将工坊Mod文件移至本地，请在创意工坊中取消订阅", QMessageBox::Ok);
 }

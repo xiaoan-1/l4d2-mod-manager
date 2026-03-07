@@ -38,6 +38,9 @@ private:
     // 启动游戏
     void startGame();
 
+    // 自动整理Mod
+    void autoOrganizeMod();
+
 private:
     Ui::MainWindow *ui;
 
