@@ -113,6 +113,9 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
+    // 移至本地
+    connect(ui->pushButton_moveLocal, &QPushButton::clicked, this, &MainWindow::moveToLocal);
+
     // 自动整理mod
     connect(ui->pushButton_autoOrganize, &QPushButton::clicked, this, &MainWindow::autoOrganizeMod);
 
@@ -277,10 +280,10 @@ void MainWindow::startGame()
 
 /**
 * @author   XiaoAn
-* @brief    自动整理Mod
-* @date     2026-03-07
+* @brief    工坊Mod文件移动至本地
+* @date     2026-03-08
 **/
-void MainWindow::autoOrganizeMod()
+void MainWindow::moveToLocal()
 {
     QString gamePath = GameManager::getInstance()->gamePath();
 
@@ -301,4 +304,15 @@ void MainWindow::autoOrganizeMod()
         }
     }
     QMessageBox::information(this, "提示", "已将工坊Mod文件移至本地，请在创意工坊中取消订阅", QMessageBox::Ok);
+    QDesktopServices::openUrl(QUrl("https://steamcommunity.com/app/550/workshop/"));
+}
+
+/**
+* @author   XiaoAn
+* @brief    自动整理Mod
+* @date     2026-03-07
+**/
+void MainWindow::autoOrganizeMod()
+{
+    QMessageBox::information(this, "提示", "待实现", QMessageBox::Ok);
 }

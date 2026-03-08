@@ -38,6 +38,9 @@ private:
     // 启动游戏
     void startGame();
 
+    // 工坊Mod文件移动至本地
+    void moveToLocal();
+
     // 自动整理Mod
     void autoOrganizeMod();
 

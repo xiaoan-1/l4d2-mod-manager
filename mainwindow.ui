@@ -626,9 +626,9 @@ font-weight: bold;</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_autoOrganize">
+        <widget class="QPushButton" name="pushButton_moveLocal">
          <property name="text">
-          <string>一键整理</string>
+          <string>工坊-&gt;本地</string>
          </property>
         </widget>
        </item>
@@ -680,6 +680,13 @@ font-weight: bold;</string>
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_autoOrganize">
+         <property name="text">
+          <string>一键整理</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
