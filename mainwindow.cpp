@@ -237,8 +237,13 @@ void MainWindow::showGameParamDilaog()
     QVBoxLayout *layout = new QVBoxLayout(&dialog);
 
     // 添加提示文本
-    QLabel *label = new QLabel("请输入内容：", &dialog);
-    layout->addWidget(label);
+    QLabel *label_tip = new QLabel("请输入内容：", &dialog);
+    layout->addWidget(label_tip);
+
+    // 启动参数
+    QLabel *label_param = new QLabel(GameManager::getInstance()->gameParam(), &dialog);
+    label_param->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    layout->addWidget(label_param);
 
     // 添加输入框
     QLineEdit *lineEdit = new QLineEdit(&dialog);
