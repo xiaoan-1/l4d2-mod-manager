@@ -74,6 +74,8 @@ public:
     // 移除Mod分类
     bool removeModCategory(const int &modId, const int &catId);
 
+    // 更新分类名称
+    bool updateCategoryName(const int &catId, const QString &name);
 
 private:
     // 静态单例实例

@@ -144,7 +144,7 @@ MainWindow::~MainWindow()
 void MainWindow::addCategory(const CategoryInfo &category)
 {
     // 1、生成分类按钮
-    CategoryButton *btn = new CategoryButton(category.name, this);
+    CategoryButton *btn = new CategoryButton(category, this);
     m_buttonGroup.addButton(btn->coreButton());
     QVBoxLayout *vboxLayout = qobject_cast<QVBoxLayout*>(ui->categoryList->layout());
     vboxLayout->insertWidget(vboxLayout->count() - 1, btn);
@@ -160,31 +160,22 @@ void MainWindow::addCategory(const CategoryInfo &category)
         refreshModCount();
     });
 
-    connect(btn, &CategoryButton::deleteCategory, this, [=](){
+    // 重命名分类
+    connect(btn, &CategoryButton::renamed, this, [=](QString oldName, QString newName){
+        m_ckListWidget->renameOption(oldName, newName);
+        ui->cardContainer->updateModCard();
+    });
 
-        QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList(category.id);
+    // 删除分类
+    connect(btn, &CategoryButton::deleted, this, [=](){
+        // 移除按钮
+        m_buttonGroup.removeButton(btn->coreButton());
+        // 移除分类筛选中的分类
+        m_ckListWidget->removeOption(category.name);
+        btn->deleteLater();
 
-        if(!modInfoList.isEmpty()){
-            int opt = QMessageBox::question(this, "确认删除", "该分类存在Mod文件信息，是否清空!", QMessageBox::Ok | QMessageBox::Cancel);
-            if(opt == QMessageBox::Cancel){
-                return;
-            }
-        }
-
-        // 删除分类
-        bool ret = SqliteObj::getInstance()->removeCategory(category.id);
-        if(ret){
-            // 移除按钮
-            m_buttonGroup.removeButton(btn->coreButton());
-            // 移除分类筛选中的分类
-            m_ckListWidget->removeOption(category.name);
-            btn->deleteLater();
-
-            // 默认刷新
-            ui->pushButton_workshop->click();
-        }else{
-            QMessageBox::warning(this, "错误", "删除失败!", QMessageBox::Ok);
-        }
+        // 刷新Mod信息
+        ui->cardContainer->updateModCard();
     });
 
     // 2、同步添加筛选项

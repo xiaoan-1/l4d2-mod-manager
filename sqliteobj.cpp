@@ -517,3 +517,25 @@ bool SqliteObj::removeModCategory(const int &modId, const int &catId)
     // 返回是否真的删除了记录（影响行数>0）
     return query.numRowsAffected() > 0;
 }
+
+/**
+* @author   XiaoAn
+* @brief    更新分类名称
+* @date     2026-03-08
+**/
+bool SqliteObj::updateCategoryName(const int &catId, const QString &name)
+{
+    if(name.isEmpty()) return false;
+
+    QSqlQuery query(m_db);
+    query.prepare("UPDATE categories set name = :name WHERE id = :cat_id");
+    query.bindValue(":cat_id", catId);
+    query.bindValue(":name", name);
+
+    if (!query.exec()) {
+        qWarning() << "分类名称修改失败：" << query.lastError().text();
+        return false;
+    }
+    // 返回是否真的修改了记录
+    return query.numRowsAffected() > 0;
+}

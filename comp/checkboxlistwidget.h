@@ -24,6 +24,9 @@ public:
     // 移除选项
     void removeOption(const QString &option);
 
+    // 重命名选项
+    void renameOption(const QString &oldName, const QString &newName);
+
     // 设置选项的选中状态
     void setOptionChecked(const QString &option, const bool &checked);
 

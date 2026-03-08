@@ -76,6 +76,21 @@ void CheckBoxListWidget::removeOption(const QString &option)
 
 /**
 * @author   XiaoAn
+* @brief    重命名选项
+* @date     2026-03-08
+**/
+void CheckBoxListWidget::renameOption(const QString &oldName, const QString &newName)
+{
+    foreach (QCheckBox *checkbox, m_checkBoxList) {
+        if(checkbox->text()== oldName){
+            checkbox->setText(newName);
+            break;
+        }
+    }
+}
+
+/**
+* @author   XiaoAn
 * @brief    设置选项的选中状态
 * @date     2026-03-04
 **/
