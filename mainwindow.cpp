@@ -12,6 +12,7 @@
 
 #include "comp/categorydialog.h"
 #include "comp/categorybutton.h"
+#include "comp/modconflictdetector.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -23,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_buttonGroup.addButton(ui->pushButton_workshop);
     m_buttonGroup.addButton(ui->pushButton_localMod);
     m_buttonGroup.addButton(ui->pushButton_trashMod);
+    m_buttonGroup.addButton(ui->pushButton_conflict);
     m_buttonGroup.setExclusive(true);
 
     // 设置菜单
@@ -62,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent)
         m_settingMenu->show();
     });
 
-    // 加载工坊Mod文件信息
+    // 加载工坊Mod文件卡片
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
         QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::WorkshopDir);
         ui->cardContainer->clearModCard();
@@ -72,7 +74,7 @@ MainWindow::MainWindow(QWidget *parent)
         refreshModCount();
     });
 
-    // 加载本地Mod文件信息
+    // 加载本地Mod文件卡片
     connect(ui->pushButton_localMod, &QPushButton::clicked, this, [=](){
         QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir);
         ui->cardContainer->clearModCard();
@@ -82,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
         refreshModCount();
     });
 
-    // 加载禁用Mod文件信息
+    // 加载禁用Mod文件卡片
     connect(ui->pushButton_trashMod, &QPushButton::clicked, this, [=](){
         QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModTrashDir);
         ui->cardContainer->clearModCard();
@@ -91,6 +93,9 @@ MainWindow::MainWindow(QWidget *parent)
         m_ckListWidget->resetOptionsChecked(true);
         refreshModCount();
     });
+
+    // 加载冲突Mod文件卡片
+    connect(ui->pushButton_conflict, &QPushButton::clicked, this, &MainWindow::checkConflictMod);
 
     // 添加自定义分类到导航栏
     QList<CategoryInfo> categoryList = SqliteObj::getInstance()->getCategoryList();
@@ -320,4 +325,41 @@ void MainWindow::moveToLocal()
 void MainWindow::autoOrganizeMod()
 {
     QMessageBox::information(this, "提示", "待实现", QMessageBox::Ok);
+}
+
+/**
+* @author   XiaoAn
+* @brief    检测冲突Mod
+* @date     2026-03-11
+**/
+void MainWindow::checkConflictMod()
+{
+    QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir);
+
+    QString gamePath = GameManager::getInstance()->gamePath();
+
+    QList<ModInfo> conflictModList;
+    for (int i = 0; i < modInfoList.size(); ++i) {
+        for (int j = i + 1; j < modInfoList.size(); ++j) {
+            ModInfo modInfo1 = modInfoList.at(i);
+            ModInfo modInfo2 = modInfoList.at(j);
+            QString filePath1 = QString("%1/%2/%3.vpk").arg(gamePath)
+                                    .arg(modInfo1.relative_path).arg(modInfo1.original_name);
+
+            QString filePath2 = QString("%1/%2/%3.vpk").arg(gamePath)
+                                    .arg(modInfo2.relative_path).arg(modInfo2.original_name);
+
+            if(ModConflictDetector::checkConflict(filePath1, filePath2)){
+                if(!conflictModList.contains(modInfo1)){
+                    conflictModList.append(modInfo1);
+                }
+                if(!conflictModList.contains(modInfo2)){
+                    conflictModList.append(modInfo2);
+                }
+            }
+        }
+    }
+
+    ui->cardContainer->clearModCard();
+    ui->cardContainer->appendModCard(conflictModList);
 }

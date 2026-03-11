@@ -44,6 +44,9 @@ private:
     // 自动整理Mod
     void autoOrganizeMod();
 
+    // 检测冲突Mod
+    void checkConflictMod();
+
 private:
     Ui::MainWindow *ui;
 

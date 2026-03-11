@@ -33,6 +33,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(l4d2-mod-manager
         MANUAL_FINALIZATION
@@ -47,6 +49,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         comp/imageloader.h comp/imageloader.cpp
         comp/checkboxlistwidget.h comp/checkboxlistwidget.cpp comp/checkboxlistwidget.ui
         README.md
+        comp/modconflictdetector.h comp/modconflictdetector.cpp
+
 
     )
 # Define target properties for Android with Qt 6 as:
@@ -70,6 +74,8 @@ endif()
 target_link_libraries(l4d2-mod-manager PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Sql)
+target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
+target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

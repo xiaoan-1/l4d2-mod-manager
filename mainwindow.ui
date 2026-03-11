@@ -554,7 +554,7 @@ font-weight: bold;</string>
             <x>0</x>
             <y>0</y>
             <width>178</width>
-            <height>529</height>
+            <height>473</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -588,9 +588,29 @@ font-weight: bold;</string>
         </widget>
        </item>
        <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="pushButton_trashMod">
          <property name="text">
           <string>已禁用</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_conflict">
+         <property name="text">
+          <string>冲突检测</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
