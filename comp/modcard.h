@@ -44,6 +44,9 @@ public:
     // 是否存在分类
     bool hasCategory(const QString &catName);
 
+    // 获取图片大小
+    QSize getImageSize();
+
 private:
     // 备注
     void remark();

@@ -118,8 +118,7 @@ void ModCard::loadImage(const QImage &image)
     if (image.isNull()) return;
 
     // 设置图片
-    QPixmap pixMap = QPixmap::fromImage(image).scaled(ui->label_img->size(), Qt::KeepAspectRatio,Qt::SmoothTransformation);
-    ui->label_img->setPixmap(pixMap);
+    ui->label_img->setPixmap(QPixmap::fromImage(image));
     ui->label_img->setAlignment(Qt::AlignCenter);
 }
 
@@ -222,6 +221,16 @@ bool ModCard::hasCategory(const QString &catName)
         }
     }
     return false;
+}
+
+/**
+* @author   XiaoAn
+* @brief    图片大小
+* @date     2026-03-14
+**/
+QSize ModCard::getImageSize()
+{
+    return ui->label_img->size();
 }
 
 /**

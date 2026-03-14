@@ -34,7 +34,6 @@ void CardContainer::updateModCard()
     // 更新卡片
     for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
         ModCard *modCard = it.value();
-        modCard->updateModInfo();
 
         // 根据分类过滤决定Mod卡片的显示与隐藏
         for (auto cat = m_categoryFilter.begin(); cat != m_categoryFilter.end(); ++cat) {
@@ -43,6 +42,8 @@ void CardContainer::updateModCard()
                 break;
             }
         }
+
+        modCard->updateModInfo();
     }
 }
 
@@ -68,7 +69,7 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
         ImageLoader::Task task;
         task.id = modInfo.id;
         task.imagePath = gamePath + modInfo.relative_path + "/" + modInfo.original_name + ".jpg";
-        task.targetSize = QSize(300, 200);
+        task.targetSize = modCard->getImageSize();
         m_imageLoader->addTask(task);
     }
     // 更新布局
