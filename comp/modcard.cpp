@@ -118,7 +118,8 @@ void ModCard::loadImage(const QImage &image)
     if (image.isNull()) return;
 
     // 设置图片
-    ui->label_img->setPixmap(QPixmap::fromImage(image));
+    QPixmap pixMap = QPixmap::fromImage(image).scaled(ui->label_img->size(), Qt::KeepAspectRatio,Qt::SmoothTransformation);
+    ui->label_img->setPixmap(pixMap);
     ui->label_img->setAlignment(Qt::AlignCenter);
 }
 
