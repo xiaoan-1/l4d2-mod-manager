@@ -50,6 +50,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         comp/checkboxlistwidget.h comp/checkboxlistwidget.cpp comp/checkboxlistwidget.ui
         README.md
         comp/modconflictdetector.h comp/modconflictdetector.cpp
+        Resources.qrc
 
 
     )

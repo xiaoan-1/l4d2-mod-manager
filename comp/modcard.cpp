@@ -40,10 +40,49 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
     // 分类
     connect(ui->pushButton_affirm, &QPushButton::clicked, this, &ModCard::classify);
 
+    // 给下拉框安装过滤器，忽略滚轮事件保证容器可以滚动
+    ui->comboBox_categorys->installEventFilter(this);
+
     // 可选性
     m_checkBox = new QCheckBox(this);
     m_checkBox->move(0, 0);
     m_checkBox->hide();
+
+    // 操作按钮
+    m_button = new QPushButton("删除模组", this);
+    m_button->setStyleSheet("padding: 0px;");
+    m_button->setIcon(QIcon(":/resources/delete.png"));
+    m_button->move(width() - m_button->width(), 0);
+    m_button->hide();
+
+    // 按钮行为
+    connect(m_button, &QPushButton::clicked, this, [=](){
+        if(m_category.id != -1){
+            // 在分类中该按钮为移除分类
+            bool ret = SqliteObj::getInstance()->removeModCategory(m_modInfo.id, m_category.id);
+            if(ret){
+                // 由父容器来销毁
+                emit destroyCard(m_modInfo.id);
+            }else{
+                QMessageBox::warning(this, "错误", "移除分类失败！", QMessageBox::Ok);
+            }
+        }else if(m_modInfo.relative_path == GameManager::ModTrashDir){
+            // 如果在回收站，则该按钮为删除按钮
+            if(QMessageBox::Ok != QMessageBox::question(this, "提示", "是否删除该模组？", QMessageBox::Ok | QMessageBox::Cancel)){
+                return;
+            }
+            QFile vpkFile(QString("%1/%2/%3.vpk").arg(GameManager::getInstance()->gamePath(),
+                                                      m_modInfo.relative_path, m_modInfo.original_name));
+            QFile imgFile(QString("%1/%2/%3.jpg").arg(GameManager::getInstance()->gamePath(),
+                                                      m_modInfo.relative_path,m_modInfo.original_name));
+            if(!vpkFile.moveToTrash()){
+                imgFile.moveToTrash();
+                QMessageBox::information(this, "提示", "已删除模组至系统回收站", QMessageBox::Ok);
+                // 由父容器来销毁
+                emit destroyCard(m_modInfo.id);
+            }
+        }
+    });
 }
 
 /**
@@ -67,20 +106,6 @@ void ModCard::setCurrentCategory(const CategoryInfo &category)
         return;
     }
     m_category = category;
-
-    // 可移除分类
-    QPushButton *categoryDelBtn = new QPushButton("移除分类",this);
-    categoryDelBtn->move(width() - categoryDelBtn->width(), 0);
-    connect(categoryDelBtn, &QPushButton::clicked, this, [=](){
-        bool ret = SqliteObj::getInstance()->removeModCategory(m_modInfo.id, category.id);
-        if(ret){
-            // 由父容器来销毁
-            emit destroyCard(m_modInfo.id);
-        }else{
-            QMessageBox::warning(this, "错误", "移除分类失败！", QMessageBox::Ok);
-        }
-    });
-    categoryDelBtn->show();
 }
 
 /**
@@ -137,10 +162,17 @@ void ModCard::updateModInfo()
         }
     }
 
+    QString styleSheet = ui->centralwidget->styleSheet();
     if(m_modInfo.relative_path == GameManager::ModTrashDir){
         ui->pushButton_move->setText("启用");
+        ui->pushButton_move->setIcon(QIcon(":/resources/enable.png"));
+        ui->pushButton_move->setStyleSheet("#pushButton_move:hover{background:#28a745;}");
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#636363;}");
     }else{
         ui->pushButton_move->setText("禁用");
+        ui->pushButton_move->setIcon(QIcon(":/resources/disable.png"));
+        ui->pushButton_move->setStyleSheet("#pushButton_move:hover{background:#dc3545;}");
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#395577;}");
     }
 }
 
@@ -246,8 +278,8 @@ void ModCard::transfer()
         destRelativePath = GameManager::ModTrashDir;
     }
 
-    QString sourFilePath = QString("%1/%2/%3").arg(gamePath).arg(m_modInfo.relative_path).arg(m_modInfo.original_name);
-    QString destFilePath = QString("%1/%2/%3").arg(gamePath).arg(destRelativePath).arg(m_modInfo.original_name);
+    QString sourFilePath = QString("%1/%2/%3").arg(gamePath, m_modInfo.relative_path, m_modInfo.original_name);
+    QString destFilePath = QString("%1/%2/%3").arg(gamePath, destRelativePath, m_modInfo.original_name);
     QFile::rename(sourFilePath + ".jpg", destFilePath + ".jpg");
 
     if(QFile::rename(sourFilePath + ".vpk", destFilePath + ".vpk")){
@@ -312,5 +344,50 @@ void ModCard::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     emit visiableChanged(true);
+}
+
+/**
+* @author   XiaoAn
+* @brief    鼠标移入
+* @date     2026-03-14
+**/
+void ModCard::enterEvent(QEnterEvent *event)
+{
+    if(m_category.id != -1){
+        m_button->setText("移除分类");
+        m_button->setIcon(QIcon(":/resources/remove.png"));
+        m_button->show();
+    }else if(m_modInfo.relative_path == GameManager::ModTrashDir){
+        m_button->setText("删除模组");
+        m_button->setIcon(QIcon(":/resources/delete.png"));
+        m_button->show();
+    }
+    QWidget::enterEvent(event);
+}
+
+/**
+* @author   XiaoAn
+* @brief    鼠标移出
+* @date     2026-03-14
+**/
+void ModCard::leaveEvent(QEvent *event)
+{
+    m_button->hide();
+    QWidget::leaveEvent(event);
+}
+
+/**
+* @author   XiaoAn
+* @brief    事件过滤
+* @date     2026-03-14
+**/
+bool ModCard::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == ui->comboBox_categorys && event->type() == QEvent::Wheel) {
+        // 忽略滚轮事件，使其传递给父窗口
+        event->ignore();
+        return true;
+    }
+    return QWidget::eventFilter(obj, event);
 }
 

@@ -59,6 +59,12 @@ protected:
 
     void showEvent(QShowEvent* event) override;
 
+    void enterEvent(QEnterEvent *event) override;
+
+    void leaveEvent(QEvent *event) override;
+
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
 signals:
     // 隐藏信号
     void visiableChanged(bool visiable);
@@ -73,6 +79,9 @@ private:
 
     // 单选框
     QCheckBox *m_checkBox;
+
+    // 移除/删除按钮
+    QPushButton *m_button = nullptr;
 
     // Mod文件信息
     ModInfo m_modInfo;

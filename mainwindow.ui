@@ -48,7 +48,28 @@ QScrollArea{border: 0px; background-color: transparent;}
 }
 
 #modCardList {background-color: transparent;}
-#categoryList {background-color: transparent;}</string>
+#categoryList {background-color: transparent;}
+
+#pushButton_setting{
+	padding: 8 4 8 4;
+	background-color: transparent;
+}
+#pushButton_setting:hover{
+	padding: 8 4 8 4;
+	background-color: rgb(100, 116, 139);
+}
+
+#pushButton_startGame{
+	color: #000;
+	border-radius: 15px;
+	font-size: 22px;
+	font-weight: bold;
+	background: #ffdb29;
+}
+#pushButton_startGame:hover{
+	color: #ffdb29;
+	background: #16171a;
+}</string>
    </property>
    <layout class="QGridLayout" name="gridLayout">
     <property name="spacing">
@@ -403,6 +424,9 @@ font-weight: bold;</string>
         <height>16777215</height>
        </size>
       </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="leftMargin">
         <number>0</number>
@@ -416,31 +440,6 @@ font-weight: bold;</string>
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item>
-        <widget class="QPushButton" name="pushButton_startGame">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>200</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>启动游戏</string>
-         </property>
-        </widget>
-       </item>
        <item>
         <widget class="QPushButton" name="pushButton_openworkshop">
          <property name="sizePolicy">
@@ -467,9 +466,44 @@ font-weight: bold;</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_setting">
+        <widget class="QPushButton" name="pushButton_startGame">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>180</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>200</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>启动游戏</string>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/resources/start.png</normaloff>:/resources/start.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>35</width>
+           <height>35</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_setting">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -487,7 +521,17 @@ font-weight: bold;</string>
           </size>
          </property>
          <property name="text">
-          <string>设置</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/resources/setting.png</normaloff>:/resources/setting.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -517,7 +561,7 @@ font-weight: bold;</string>
        <item>
         <widget class="QPushButton" name="pushButton_workshop">
          <property name="text">
-          <string>工坊</string>
+          <string>工坊模组</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -533,7 +577,7 @@ font-weight: bold;</string>
        <item>
         <widget class="QPushButton" name="pushButton_localMod">
          <property name="text">
-          <string>本地</string>
+          <string>本地模组</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -643,6 +687,10 @@ font-weight: bold;</string>
          <property name="text">
           <string>添加分类</string>
          </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/resources/add.png</normaloff>:/resources/add.png</iconset>
+         </property>
         </widget>
        </item>
        <item>
@@ -685,6 +733,10 @@ font-weight: bold;</string>
         <widget class="QPushButton" name="pushButton_categoryFilter">
          <property name="text">
           <string>分类筛选</string>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/resources/classify.png</normaloff>:/resources/classify.png</iconset>
          </property>
         </widget>
        </item>
@@ -753,6 +805,8 @@ font-weight: bold;</string>
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="Resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

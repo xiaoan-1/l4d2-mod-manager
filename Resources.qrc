@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/setting.png</file>
+        <file>resources/start.png</file>
+        <file>resources/classify.png</file>
+        <file>resources/delete.png</file>
+        <file>resources/enable.png</file>
+        <file>resources/remark.png</file>
+        <file>resources/add.png</file>
+        <file>resources/back.png</file>
+        <file>resources/disable.png</file>
+        <file>resources/remove.png</file>
+    </qresource>
+</RCC>
