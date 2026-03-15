@@ -49,6 +49,9 @@ public slots:
     void slot_disabledAll();
 
 private:
+    // 过滤卡片
+    void filterCard();
+
     // 刷新布局
     void updateLayout();
 
@@ -63,6 +66,9 @@ private:
 
     // Mod卡片控件
     QMap<int, ModCard*> m_modCardMap;
+
+    // 查询过滤
+    QString m_searchFilter;
 
     // 分类筛选过滤
     QMap<QString, bool> m_categoryFilter;

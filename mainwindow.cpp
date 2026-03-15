@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_ckListWidget, &CheckBoxListWidget::optionCheckStateChanged, this, [=](QString categoryName, bool checked){
         ui->cardContainer->filterCard(categoryName, checked);
     });
+    // 默认添加一个未分类选项
+    m_ckListWidget->addOption("未分类");
 
     // 启动游戏
     connect(ui->pushButton_startGame, &QPushButton::clicked, this, &MainWindow::startGame);

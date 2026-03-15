@@ -250,6 +250,7 @@ void ModCard::remark()
         ui->pushButton_remark->setText("确认");
     }else if(QLineEdit *lineEdit = qobject_cast<QLineEdit*>(w)){
         QLabel *label = new QLabel(this);
+        label->setStyleSheet("color: rgb(0, 170, 255);font-size: 20px;font-weight: bold;");
         if(!lineEdit->text().isEmpty()){
             label->setText(lineEdit->text());
             // 修改数据库Mod自定义名称
@@ -283,9 +284,11 @@ void ModCard::transfer()
     if(m_modInfo.relative_path == GameManager::ModTrashDir){
         btnText = "禁用";
         destRelativePath = GameManager::ModLocalDir;
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#395577;}");
     }else{
         btnText = "启用";
         destRelativePath = GameManager::ModTrashDir;
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#636363;}");
     }
 
     QString sourFilePath = QString("%1/%2/%3").arg(gamePath, m_modInfo.relative_path, m_modInfo.original_name);
@@ -332,28 +335,6 @@ void ModCard::classify()
         m_categoryList.removeAt(categoryIdx);
         ui->comboBox_categorys->removeItem(categoryIdx);
     }
-}
-
-/**
-* @author   XiaoAn
-* @brief    隐藏信号
-* @date     2026-03-01
-**/
-void ModCard::hideEvent(QHideEvent *event)
-{
-    QWidget::hideEvent(event);
-    emit visiableChanged(false);
-}
-
-/**
-* @author   XiaoAn
-* @brief    显示信号
-* @date     2026-03-01
-**/
-void ModCard::showEvent(QShowEvent *event)
-{
-    QWidget::showEvent(event);
-    emit visiableChanged(true);
 }
 
 /**

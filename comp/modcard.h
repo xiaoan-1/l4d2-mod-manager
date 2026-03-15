@@ -44,8 +44,13 @@ public:
     // 是否存在分类
     bool hasCategory(const QString &catName);
 
+    // 已分类列表
+    QList<CategoryInfo> classfiedCategory() { return m_classifiedList; };
+
     // 获取图片大小
     QSize getImageSize();
+
+
 
 private:
     // 备注
@@ -58,10 +63,6 @@ private:
     void classify();
 
 protected:
-    void hideEvent(QHideEvent* event) override;
-
-    void showEvent(QShowEvent* event) override;
-
     void enterEvent(QEnterEvent *event) override;
 
     void leaveEvent(QEvent *event) override;
@@ -70,7 +71,7 @@ protected:
 
 signals:
     // 隐藏信号
-    void visiableChanged(bool visiable);
+    void hideCard();
 
     // 销毁信号
     void destroyCard(const int &modId);

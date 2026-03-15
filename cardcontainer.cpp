@@ -31,18 +31,9 @@ CardContainer::~CardContainer()
 **/
 void CardContainer::updateModCard()
 {
-    // 更新卡片
+    // 更新所有卡片信息
     for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
         ModCard *modCard = it.value();
-
-        // 根据分类过滤决定Mod卡片的显示与隐藏
-        for (auto cat = m_categoryFilter.begin(); cat != m_categoryFilter.end(); ++cat) {
-            if(modCard->hasCategory(cat.key())){
-                modCard->setVisible(cat.value());
-                break;
-            }
-        }
-
         modCard->updateModInfo();
     }
 }
@@ -62,8 +53,8 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
 
         // 卡片销毁或者隐藏时触发布局更新
         connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
-        connect(modCard, &ModCard::visiableChanged, this, &CardContainer::updateLayout);
-        // Mod分类发生变化触发更新
+        // connect(modCard, &ModCard::visiableChanged, this, &CardContainer::updateLayout);
+        // Mod分类发生变化触发更新（过滤条件）
         connect(modCard, &ModCard::classified, this, &CardContainer::updateModCard);
         // 提交Mod卡片图片加载任务
         ImageLoader::Task task;
@@ -118,7 +109,7 @@ void CardContainer::filterCard(const QString &catName, bool isShow)
         m_categoryFilter.insert(catName, isShow);
     }
 
-    updateModCard();
+    filterCard();
 }
 
 /**
@@ -192,23 +183,8 @@ void CardContainer::setContentsMargins(int left, int top, int right, int bottom)
 **/
 void CardContainer::slot_searchCard(const QString &name)
 {
-    if(name.isEmpty()){
-        // 全显示
-        for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
-            it.value()->setVisible(true);
-        }
-    }
-
-    // 匹配显示
-    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
-        ModCard *modCard = it.value();
-        if(modCard->modInfo().custom_name.contains(name)
-            || modCard->modInfo().original_name.contains(name)){
-            modCard->setVisible(true);
-        }else{
-            modCard->setVisible(false);
-        }
-    }
+    m_searchFilter = name;
+    filterCard();
 }
 
 /**
@@ -219,6 +195,57 @@ void CardContainer::slot_searchCard(const QString &name)
 void CardContainer::slot_disabledAll()
 {
 
+}
+
+/**
+* @author   XiaoAn
+* @brief    过滤卡片
+* @date     2026-03-15
+**/
+void CardContainer::filterCard()
+{
+    // 先获取筛选后的卡片列表
+    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
+        ModCard *modCard = it.value();
+
+        // 该Mod卡片的分类是否被过滤
+        bool isFiltered = false;
+        for (auto cat = m_categoryFilter.begin(); cat != m_categoryFilter.end(); ++cat) {
+            // 《未分类选项》被取消选择，没有分类的卡片将被过滤
+            if(!cat.value() && cat.key() == "未分类" && modCard->classfiedCategory().isEmpty()){
+                isFiltered = true;
+                break;
+            }
+
+            // 该分类被取消选择，过滤存在该分类的卡片
+            if(!cat.value() && modCard->hasCategory(cat.key())){
+                isFiltered = true;
+                break;
+            }
+        }
+
+        // 被分类过滤则隐藏
+        if(isFiltered){
+            modCard->setVisible(false);
+            continue;
+        }
+
+        if(m_searchFilter.isEmpty()){
+            // 空搜索，显示全部
+            modCard->setVisible(true);
+            continue;
+        }
+
+        // 搜索过滤
+        if(modCard->modInfo().custom_name.contains(m_searchFilter)
+            || modCard->modInfo().original_name.contains(m_searchFilter)){
+            modCard->setVisible(true);
+        }else{
+            modCard->setVisible(false);
+        }
+    }
+
+    updateLayout();
 }
 
 /**
@@ -276,7 +303,7 @@ void CardContainer::updateLayout()
 void CardContainer::onImageLoaded(const int &modId, const QImage &image, bool fromCache)
 {
     if (!m_modCardMap.contains(modId)) return;
-    // 更新卡片
+    // 更新卡片图片
     m_modCardMap.value(modId)->loadImage(image);
 }
 
@@ -288,7 +315,7 @@ void CardContainer::onImageLoaded(const int &modId, const QImage &image, bool fr
 void CardContainer::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
-
+    // 重新布局
     if (event->size() != event->oldSize()) {
         updateLayout();
     }
