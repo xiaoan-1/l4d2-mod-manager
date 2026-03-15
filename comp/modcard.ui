@@ -107,7 +107,7 @@
         <item row="0" column="0" colspan="2">
          <widget class="QLabel" name="label_name">
           <property name="styleSheet">
-           <string notr="true">color: rgb(0, 170, 255);
+           <string notr="true">color: #00d4ff;
 font-size: 20px;
 font-weight: bold;</string>
           </property>
@@ -115,7 +115,7 @@ font-weight: bold;</string>
            <string>文件名</string>
           </property>
           <property name="wordWrap">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
          </widget>
         </item>

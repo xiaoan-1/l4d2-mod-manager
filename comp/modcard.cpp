@@ -132,8 +132,10 @@ void ModCard::updateModInfo()
     // 备注名称
     if(m_modInfo.custom_name.isEmpty()){
         ui->label_name->setText(m_modInfo.original_name);
+        ui->label_name->setToolTip(m_modInfo.original_name);
     }else{
         ui->label_name->setText(m_modInfo.custom_name);
+        ui->label_name->setToolTip(m_modInfo.custom_name);
     }
 
     QString baseDir = GameManager::getInstance()->gamePath() + m_modInfo.relative_path;
@@ -167,12 +169,12 @@ void ModCard::updateModInfo()
         ui->pushButton_move->setText("启用");
         ui->pushButton_move->setIcon(QIcon(":/resources/enable.png"));
         ui->pushButton_move->setStyleSheet("#pushButton_move:hover{background:#28a745;}");
-        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#636363;}");
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#1c2027;}");
     }else{
         ui->pushButton_move->setText("禁用");
         ui->pushButton_move->setIcon(QIcon(":/resources/disable.png"));
         ui->pushButton_move->setStyleSheet("#pushButton_move:hover{background:#dc3545;}");
-        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#395577;}");
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#465975;}");
     }
 }
 
@@ -284,11 +286,11 @@ void ModCard::transfer()
     if(m_modInfo.relative_path == GameManager::ModTrashDir){
         btnText = "禁用";
         destRelativePath = GameManager::ModLocalDir;
-        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#395577;}");
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#465975;}");
     }else{
         btnText = "启用";
         destRelativePath = GameManager::ModTrashDir;
-        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#636363;}");
+        ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#1c2027;}");
     }
 
     QString sourFilePath = QString("%1/%2/%3").arg(gamePath, m_modInfo.relative_path, m_modInfo.original_name);

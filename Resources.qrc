@@ -10,5 +10,6 @@
         <file>resources/back.png</file>
         <file>resources/disable.png</file>
         <file>resources/remove.png</file>
+        <file>resources/dropdown.png</file>
     </qresource>
 </RCC>
