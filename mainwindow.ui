@@ -641,7 +641,7 @@ font-weight: bold;</string>
        <item>
         <widget class="QPushButton" name="pushButton_trashMod">
          <property name="text">
-          <string>已禁用</string>
+          <string>已禁用模组</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -654,7 +654,7 @@ font-weight: bold;</string>
        <item>
         <widget class="QPushButton" name="pushButton_conflict">
          <property name="text">
-          <string>冲突检测</string>
+          <string>冲突模组检测</string>
          </property>
          <property name="checkable">
           <bool>true</bool>

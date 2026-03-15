@@ -53,9 +53,6 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
 
         // 卡片销毁或者隐藏时触发布局更新
         connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
-        // connect(modCard, &ModCard::visiableChanged, this, &CardContainer::updateLayout);
-        // Mod分类发生变化触发更新（过滤条件）
-        connect(modCard, &ModCard::classified, this, &CardContainer::updateModCard);
         // 提交Mod卡片图片加载任务
         ImageLoader::Task task;
         task.id = modInfo.id;

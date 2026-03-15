@@ -173,7 +173,7 @@ font-weight: bold;</string>
            </sizepolicy>
           </property>
           <property name="text">
-           <string>确认分类</string>
+           <string>添加分类</string>
           </property>
          </widget>
         </item>
