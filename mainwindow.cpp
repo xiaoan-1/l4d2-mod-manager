@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QProcess>
+#include <QPlainTextEdit>
 #include <QDebug>
 
 #include "comp/categorydialog.h"
@@ -247,15 +248,16 @@ void MainWindow::showGameParamDilaog()
     QLabel *label_tip = new QLabel("请输入内容：", &dialog);
     layout->addWidget(label_tip);
 
-    // 启动参数
-    QLabel *label_param = new QLabel(GameManager::getInstance()->gameParam(), &dialog);
-    label_param->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    layout->addWidget(label_param);
-
     // 添加输入框
-    QLineEdit *lineEdit = new QLineEdit(&dialog);
-    lineEdit->setPlaceholderText("输入启动参数......");
-    layout->addWidget(lineEdit);
+    QPlainTextEdit *textEdit = new QPlainTextEdit(&dialog);
+    QString gameParam = GameManager::getInstance()->gameParam();
+    if(gameParam.isEmpty()){
+        textEdit->setPlaceholderText("输入启动参数......");
+    }else{
+        textEdit->setPlainText(gameParam);
+    }
+
+    layout->addWidget(textEdit);
 
     // 添加按钮
     QDialogButtonBox *buttonBox = new QDialogButtonBox(
@@ -268,7 +270,7 @@ void MainWindow::showGameParamDilaog()
     connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
 
     if (dialog.exec() == QDialog::Accepted) {
-        QString inputText = lineEdit->text();
+        QString inputText = textEdit->toPlainText();
         GameManager::getInstance()->setGameParam(inputText);
     }
 }
