@@ -289,7 +289,7 @@ bool SqliteObj::appendModInfo(const ModInfo &modInfo)
     query.bindValue(":custom_name", modInfo.custom_name);
 
     if (!query.exec()) {
-        qWarning() << "添加Mod信息失败：" << query.lastError().text();
+        qWarning() << "添加Mod信息失败：" << modInfo.original_name << query.lastError().text();
         return false;
     }
     return true;

@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QResizeEvent>
 #include "comp/modcard.h"
-#include "comp/imageloader.h"
+#include "utils/imageloader.h"
 
 namespace Ui {
 class CardContainer;

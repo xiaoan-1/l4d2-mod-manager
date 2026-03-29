@@ -11,15 +11,21 @@
 #include <QPlainTextEdit>
 #include <QDebug>
 
+#include <windows.h>
+#include <tlhelp32.h>
 #include "comp/categorydialog.h"
 #include "comp/categorybutton.h"
-#include "comp/modconflictdetector.h"
+#include "utils/modconflictdetector.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    setWindowTitle("L4D2-Mod管理工具");
+
+    initWidget();
 
     // 全局互斥选中按钮
     m_buttonGroup.addButton(ui->pushButton_workshop);
@@ -28,44 +34,43 @@ MainWindow::MainWindow(QWidget *parent)
     m_buttonGroup.addButton(ui->pushButton_conflict);
     m_buttonGroup.setExclusive(true);
 
-    // 设置菜单
-    m_settingMenu = new QMenu(this);
-    m_settingMenu->setWindowFlags(Qt::Popup);
-    m_settingMenu->addAction("设置游戏路径", this, [=](){
-        QString gamePath = QFileDialog::getExistingDirectory(this, "选择游戏根路径", QDir::homePath(), QFileDialog::ShowDirsOnly);
-        if(gamePath.isEmpty() || !GameManager::getInstance()->setGamePath(gamePath)) return;
-    });
-    m_settingMenu->addAction("打开游戏路径", this, [=](){
-        QString gamePath = GameManager::getInstance()->gamePath();
-        if(QDir(gamePath).exists()){
-            QDesktopServices::openUrl(QUrl::fromLocalFile(gamePath));
+    // 导入vpk文件到本地
+    connect(ui->pushButton_importMod, &QPushButton::clicked, this, &MainWindow::importMod);
+
+    // 添加自定义分类到导航栏
+    QList<CategoryInfo> categoryList = SqliteObj::getInstance()->getCategoryList();
+    foreach (const auto &category, categoryList) {
+        addCategory(category);
+    }
+
+    // 手动添加自定义分类
+    connect(ui->pushButton_addCategory, &QPushButton::clicked, this, [=](){
+        CategoryDialog dialog(this);
+        if (dialog.exec() == QDialog::Accepted) {
+            QString categoryName = dialog.getCategory();
+            if(categoryName.isEmpty()) return;
+            // 插入数据库
+            if (!SqliteObj::getInstance()->appendCategory(categoryName)) {
+                QMessageBox::warning(this, "错误", "分类添加失败！", QMessageBox::Ok);
+                return;
+            }
+            addCategory(SqliteObj::getInstance()->getCategoryInfo(categoryName));
         }
     });
-    m_settingMenu->addAction("设置启动参数", this, &MainWindow::showGameParamDilaog);;
 
-    // 筛选面板
-    m_ckListWidget = new CheckBoxListWidget(this);
-    connect(m_ckListWidget, &CheckBoxListWidget::optionCheckStateChanged, this, [=](QString categoryName, bool checked){
-        ui->cardContainer->filterCard(categoryName, checked);
-    });
-    // 默认添加一个未分类选项
-    m_ckListWidget->addOption("未分类");
+    // 移至本地
+    connect(ui->pushButton_moveLocal, &QPushButton::clicked, this, &MainWindow::moveToLocal);
 
-    // 启动游戏
-    connect(ui->pushButton_startGame, &QPushButton::clicked, this, &MainWindow::startGame);
+    // 自动整理mod
+    connect(ui->pushButton_autoOrganize, &QPushButton::clicked, this, &MainWindow::autoOrganizeMod);
 
     // 打开创意工坊网页
     connect(ui->pushButton_openworkshop, &QPushButton::clicked, this, [=](){
         QDesktopServices::openUrl(QUrl("https://steamcommunity.com/app/550/workshop/"));
     });
 
-    // 弹出设置菜单
-    connect(ui->pushButton_setting, &QPushButton::clicked, this, [=](){
-        // 获取按钮在屏幕上的绝对位置
-        QPoint globalBtnPos = ui->pushButton_setting->mapToGlobal(QPoint(0, 0));
-        m_settingMenu->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_setting->height());
-        m_settingMenu->show();
-    });
+    // 启动游戏
+    connect(ui->pushButton_startGame, &QPushButton::clicked, this, &MainWindow::startGame);
 
     // 加载工坊Mod文件卡片
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
@@ -100,43 +105,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 加载冲突Mod文件卡片
     connect(ui->pushButton_conflict, &QPushButton::clicked, this, &MainWindow::checkConflictMod);
 
-    // 添加自定义分类到导航栏
-    QList<CategoryInfo> categoryList = SqliteObj::getInstance()->getCategoryList();
-    foreach (const auto &category, categoryList) {
-        addCategory(category);
-    }
-
-    // 手动添加自定义分类
-    connect(ui->pushButton_addCategory, &QPushButton::clicked, this, [=](){
-        CategoryDialog dialog(this);
-        if (dialog.exec() == QDialog::Accepted) {
-            QString categoryName = dialog.getCategory();
-            if(categoryName.isEmpty()) return;
-            // 插入数据库
-            if (!SqliteObj::getInstance()->appendCategory(categoryName)) {
-                QMessageBox::warning(this, "错误", "分类添加失败！", QMessageBox::Ok);
-                return;
-            }
-            addCategory(SqliteObj::getInstance()->getCategoryInfo(categoryName));
-        }
-    });
-
-    // 移至本地
-    connect(ui->pushButton_moveLocal, &QPushButton::clicked, this, &MainWindow::moveToLocal);
-
-    // 自动整理mod
-    connect(ui->pushButton_autoOrganize, &QPushButton::clicked, this, &MainWindow::autoOrganizeMod);
-
     // 搜索Mod
     connect(ui->lineEdit_search, &QLineEdit::textChanged, ui->cardContainer, &CardContainer::slot_searchCard);
-
-    // 打开筛选面板
-    connect(ui->pushButton_categoryFilter, &QPushButton::clicked, this, [=](){
-        // 获取按钮在屏幕上的绝对位置
-        QPoint globalBtnPos = ui->pushButton_categoryFilter->mapToGlobal(QPoint(0, 0));
-        m_ckListWidget->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_categoryFilter->height());
-        m_ckListWidget->show();
-    });
 
     // 默认刷新
     emit ui->pushButton_workshop->clicked();
@@ -145,6 +115,53 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+/**
+* @author   XiaoAn
+* @brief    初始化组件
+* @date     2026-03-29
+**/
+void MainWindow::initWidget()
+{
+    // 设置菜单
+    m_settingMenu = new QMenu(this);
+    m_settingMenu->setWindowFlags(Qt::Popup);
+    m_settingMenu->addAction("设置游戏路径", this, [=](){
+        QString gamePath = QFileDialog::getExistingDirectory(this, "选择游戏根路径", QDir::homePath(), QFileDialog::ShowDirsOnly);
+        if(gamePath.isEmpty() || !GameManager::getInstance()->setGamePath(gamePath)) return;
+    });
+    m_settingMenu->addAction("打开游戏路径", this, [=](){
+        QString gamePath = GameManager::getInstance()->gamePath();
+        if(QDir(gamePath).exists()){
+            QDesktopServices::openUrl(QUrl::fromLocalFile(gamePath));
+        }
+    });
+    m_settingMenu->addAction("设置启动参数", this, &MainWindow::showGameParamDilaog);;
+
+    // 弹出设置菜单
+    connect(ui->pushButton_setting, &QPushButton::clicked, this, [=](){
+        // 获取按钮在屏幕上的绝对位置
+        QPoint globalBtnPos = ui->pushButton_setting->mapToGlobal(QPoint(0, 0));
+        m_settingMenu->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_setting->height());
+        m_settingMenu->show();
+    });
+
+    // 筛选面板
+    m_ckListWidget = new CheckBoxListWidget(this);
+    connect(m_ckListWidget, &CheckBoxListWidget::optionCheckStateChanged, this, [=](QString categoryName, bool checked){
+        ui->cardContainer->filterCard(categoryName, checked);
+    });
+    // 默认添加一个未分类选项
+    m_ckListWidget->addOption("未分类");
+
+    // 打开筛选面板
+    connect(ui->pushButton_categoryFilter, &QPushButton::clicked, this, [=](){
+        // 获取按钮在屏幕上的绝对位置
+        QPoint globalBtnPos = ui->pushButton_categoryFilter->mapToGlobal(QPoint(0, 0));
+        m_ckListWidget->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_categoryFilter->height());
+        m_ckListWidget->show();
+    });
 }
 
 /**
@@ -275,6 +292,28 @@ void MainWindow::showGameParamDilaog()
     }
 }
 
+bool isGameRunning(const QString &exeName)
+{
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) return false;
+
+    PROCESSENTRY32 pe;
+    pe.dwSize = sizeof(PROCESSENTRY32);
+    bool found = false;
+
+    if (Process32First(hSnapshot, &pe)) {
+        do {
+            if (_wcsicmp(pe.szExeFile, exeName.toStdWString().c_str()) == 0) {
+                found = true;
+                break;
+            }
+        } while (Process32Next(hSnapshot, &pe));
+    }
+
+    CloseHandle(hSnapshot);
+    return found;
+}
+
 /**
 * @author   XiaoAn
 * @brief    启动游戏
@@ -282,6 +321,11 @@ void MainWindow::showGameParamDilaog()
 **/
 void MainWindow::startGame()
 {
+    if(isGameRunning("left4dead2.exe")){
+        QMessageBox::warning(this, "错误", "游戏已启动!", QMessageBox::Ok);
+        return;
+    }
+
     QString gameParm = GameManager::getInstance()->gameParam();
     QString steamUrl = QString("steam://rungameid/550//%1").arg(gameParm);
 
@@ -289,6 +333,23 @@ void MainWindow::startGame()
 
     if(!success){
         QMessageBox::warning(this, "错误", "启动失败!", QMessageBox::Ok);
+    }
+}
+
+/**
+* @author   XiaoAn
+* @brief    导入mod
+* @date     2026-03-29
+**/
+void MainWindow::importMod()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, "选择vpk文件", QDir::homePath(), "(*.vpk)");
+    if(filePath.isEmpty()) return;
+
+    QFileInfo fileInfo(filePath);
+    QString gamePath = GameManager::getInstance()->gamePath();
+    if(!QFile(filePath).rename(QString("%1/%2/%3").arg(gamePath, GameManager::ModLocalDir, fileInfo.fileName()))){
+        QMessageBox::warning(this, "错误", "导入失败!", QMessageBox::Ok);
     }
 }
 
@@ -305,8 +366,8 @@ void MainWindow::moveToLocal()
     foreach (const ModInfo &modInfo, modInfoList) {
         // 工坊的Mod移入本地目录
         if(modInfo.relative_path == GameManager::WorkshopDir){
-            QString sourFilePath = QString("%1/%2/%3").arg(gamePath).arg(modInfo.relative_path).arg(modInfo.original_name);
-            QString destFilePath = QString("%1/%2/%3").arg(gamePath).arg(GameManager::ModLocalDir).arg(modInfo.original_name);
+            QString sourFilePath = QString("%1/%2/%3").arg(gamePath, modInfo.relative_path, modInfo.original_name);
+            QString destFilePath = QString("%1/%2/%3").arg(gamePath, GameManager::ModLocalDir, modInfo.original_name);
             QFile::rename(sourFilePath + ".jpg", destFilePath + ".jpg");
             if(QFile::rename(sourFilePath + ".vpk", destFilePath + ".vpk")){
                 if(!SqliteObj::getInstance()->updateModRelativePath(modInfo.id, GameManager::ModLocalDir)){
@@ -347,11 +408,9 @@ void MainWindow::checkConflictMod()
         for (int j = i + 1; j < modInfoList.size(); ++j) {
             ModInfo modInfo1 = modInfoList.at(i);
             ModInfo modInfo2 = modInfoList.at(j);
-            QString filePath1 = QString("%1/%2/%3.vpk").arg(gamePath)
-                                    .arg(modInfo1.relative_path).arg(modInfo1.original_name);
+            QString filePath1 = QString("%1/%2/%3.vpk").arg(gamePath, modInfo1.relative_path, modInfo1.original_name);
 
-            QString filePath2 = QString("%1/%2/%3.vpk").arg(gamePath)
-                                    .arg(modInfo2.relative_path).arg(modInfo2.original_name);
+            QString filePath2 = QString("%1/%2/%3.vpk").arg(gamePath, modInfo2.relative_path, modInfo2.original_name);
 
             if(ModConflictDetector::checkConflict(filePath1, filePath2)){
                 if(!conflictModList.contains(modInfo1)){

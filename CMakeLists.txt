@@ -45,11 +45,12 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         comp/modcard.h comp/modcard.cpp comp/modcard.ui
         comp/categorydialog.h comp/categorydialog.cpp  comp/categorydialog.ui
         comp/categorybutton.h comp/categorybutton.cpp comp/categorybutton.ui
-        cardcontainer.h cardcontainer.cpp cardcontainer.ui
-        comp/imageloader.h comp/imageloader.cpp
         comp/checkboxlistwidget.h comp/checkboxlistwidget.cpp comp/checkboxlistwidget.ui
+        utils/imageloader.h utils/imageloader.cpp
+        utils/modconflictdetector.h utils/modconflictdetector.cpp
+        widget/cardcontainer.h widget/cardcontainer.cpp widget/cardcontainer.ui
+        widget/moddetailwidget.h widget/moddetailwidget.cpp widget/moddetailwidget.ui
         README.md
-        comp/modconflictdetector.h comp/modconflictdetector.cpp
         Resources.qrc
 
 

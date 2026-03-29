@@ -38,7 +38,7 @@ void CheckBoxListWidget::addOption(const QString &option)
     QCheckBox *checkBox = new QCheckBox(option);
     checkBox->setChecked(true);
     connect(checkBox, &QCheckBox::checkStateChanged, this, [=](bool checked){
-        optionCheckStateChanged(checkBox->text(), checked);
+        emit optionCheckStateChanged(checkBox->text(), checked);
     });
 
     m_checkBoxList.append(checkBox);

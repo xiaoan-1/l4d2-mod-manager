@@ -164,7 +164,6 @@ void ModCard::updateModInfo()
         }
     }
 
-    QString styleSheet = ui->centralwidget->styleSheet();
     if(m_modInfo.relative_path == GameManager::ModTrashDir){
         ui->pushButton_move->setText("启用");
         ui->pushButton_move->setIcon(QIcon(":/resources/enable.png"));

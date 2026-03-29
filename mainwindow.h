@@ -8,8 +8,8 @@
 #include "sqliteobj.h"
 #include "gamemanager.h"
 #include "comp/modcard.h"
-#include "cardcontainer.h"
 #include "comp/checkboxlistwidget.h"
+#include "widget/cardcontainer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,6 +26,8 @@ public:
     ~MainWindow();
 
 private:
+    void initWidget();
+
     // 添加分类信息
     void addCategory(const CategoryInfo &category);
 
@@ -37,6 +39,9 @@ private:
 
     // 启动游戏
     void startGame();
+
+    // 导入mod到本地
+    void importMod();
 
     // 工坊Mod文件移动至本地
     void moveToLocal();

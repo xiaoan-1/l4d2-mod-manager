@@ -124,11 +124,6 @@ void GameManager::syncModInfo()
             SqliteObj::getInstance()->removeModInfo(modInfo.id);
         }
     }
-
-    // 扫描目录下的Mod文件添加未录入的Mod文件信息
-    scanDirModInfo(ModLocalDir);
-    scanDirModInfo(WorkshopDir);
-    scanDirModInfo(ModTrashDir);
 }
 
 
