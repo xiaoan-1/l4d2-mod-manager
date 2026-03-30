@@ -58,12 +58,6 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    // 移至本地
-    connect(ui->pushButton_moveLocal, &QPushButton::clicked, this, &MainWindow::moveToLocal);
-
-    // 自动整理mod
-    connect(ui->pushButton_autoOrganize, &QPushButton::clicked, this, &MainWindow::autoOrganizeMod);
-
     // 打开创意工坊网页
     connect(ui->pushButton_openworkshop, &QPushButton::clicked, this, [=](){
         QDesktopServices::openUrl(QUrl("https://steamcommunity.com/app/550/workshop/"));
@@ -124,6 +118,37 @@ MainWindow::~MainWindow()
 **/
 void MainWindow::initWidget()
 {
+    // 操作菜单
+    m_operationMenu = new QMenu(this);
+    m_operationMenu->setWindowFlags(Qt::Popup);
+    m_operationMenu->addAction("工坊移至本地", this, &MainWindow::moveToLocal);
+    m_operationMenu->addAction("安装dvxk补丁", this, [=](){
+        bool isSuccess = GameManager::getInstance()->copyDirectory(
+            QCoreApplication::applicationDirPath() + "/patch/dxvk-2.7.1", GameManager::getInstance()->gamePath());
+        if(isSuccess){
+            QMessageBox::information(this, "提示", "安装成功!", QMessageBox::Ok);
+        }else{
+            QMessageBox::warning(this, "提示", "安装失败!", QMessageBox::Ok);
+        }
+    });
+    m_operationMenu->addAction("安装L4N平台", this, [=](){
+        bool isSuccess = GameManager::getInstance()->copyDirectory(
+            QCoreApplication::applicationDirPath() + "/patch/L4N_v2.1.6", GameManager::getInstance()->gamePath());
+        if(isSuccess){
+            QMessageBox::information(this, "提示", "安装成功!", QMessageBox::Ok);
+        }else{
+            QMessageBox::warning(this, "提示", "安装失败!", QMessageBox::Ok);
+        }
+    });
+
+    // 弹出操作菜单
+    connect(ui->pushButton_moreOperation, &QPushButton::clicked, this, [=](){
+        // 获取按钮在屏幕上的绝对位置
+        QPoint globalBtnPos = ui->pushButton_moreOperation->mapToGlobal(QPoint(0, 0));
+        m_operationMenu->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_moreOperation->height());
+        m_operationMenu->show();
+    });
+
     // 设置菜单
     m_settingMenu = new QMenu(this);
     m_settingMenu->setWindowFlags(Qt::Popup);
@@ -380,16 +405,6 @@ void MainWindow::moveToLocal()
     }
     QMessageBox::information(this, "提示", "已将工坊Mod文件移至本地，请在创意工坊中取消订阅", QMessageBox::Ok);
     QDesktopServices::openUrl(QUrl("https://steamcommunity.com/app/550/workshop/"));
-}
-
-/**
-* @author   XiaoAn
-* @brief    自动整理Mod
-* @date     2026-03-07
-**/
-void MainWindow::autoOrganizeMod()
-{
-    QMessageBox::information(this, "提示", "待实现", QMessageBox::Ok);
 }
 
 /**

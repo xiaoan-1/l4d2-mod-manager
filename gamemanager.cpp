@@ -154,3 +154,41 @@ QList<ModInfo> GameManager::scanDirModInfo(const QString &relativePath)
     return modInfoList;
 }
 
+/**
+* @author   XiaoAn
+* @brief    安装补丁
+* @date     2026-03-30
+**/
+bool GameManager::copyDirectory(const QString &srcPath, const QString &dstDir)
+{
+    bool success = true;
+    QDir srcDir(srcPath);
+
+    // 遍历所有条目
+    QFileInfoList entries = srcDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+    foreach (const QFileInfo &entry , entries) {
+        QString srcPath = entry.absoluteFilePath();
+        QString dstPath = dstDir + "/" + entry.fileName();
+
+        if (entry.isDir()) {
+            QDir().mkdir(dstPath);
+            // 递归拷贝子目录
+            if (!copyDirectory(srcPath, dstPath)) {
+                success = false;
+            }
+        } else {
+
+            // 拷贝文件（覆盖）
+            if (QFile::exists(dstPath)) {
+                QFile::remove(dstPath);
+            }
+
+            if (!QFile::copy(srcPath, dstPath)) {
+                qDebug() << "拷贝失败:" << srcPath;
+                success = false;
+            }
+        }
+    }
+    return success;
+}
+

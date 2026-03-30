@@ -46,9 +46,6 @@ private:
     // 工坊Mod文件移动至本地
     void moveToLocal();
 
-    // 自动整理Mod
-    void autoOrganizeMod();
-
     // 检测冲突Mod
     void checkConflictMod();
 
@@ -57,6 +54,9 @@ private:
 
     // 设置菜单
     QMenu *m_settingMenu;
+
+    // 操作菜单
+    QMenu *m_operationMenu;
 
     // 分类筛选列表
     CheckBoxListWidget *m_ckListWidget;

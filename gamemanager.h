@@ -33,6 +33,9 @@ public:
     // 扫描相对路径下的Mod文件信息
     QList<ModInfo> scanDirModInfo(const QString &relativePath);
 
+    // 拷贝文件到游戏路径下
+    bool copyDirectory(const QString &srcDir, const QString &dstDir);
+
 private:
     // 本地文件和数据库同步信息
     void syncModInfo();
