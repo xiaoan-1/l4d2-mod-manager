@@ -37,6 +37,9 @@ public:
     bool copyDirectory(const QString &srcDir, const QString &dstDir);
 
 private:
+    // 查找游戏路径
+    QString findGamePath();
+
     // 本地文件和数据库同步信息
     void syncModInfo();
 

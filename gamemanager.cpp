@@ -20,6 +20,11 @@ GameManager::GameManager(QObject *parent)
     m_gamePath = setting.value("GamePath").toString();
     m_gameParam = setting.value("GameParam").toString();
 
+    if(m_gamePath.isEmpty() || !QDir(m_gamePath).exists()){
+        // 查询路径
+        m_gamePath = findGamePath();
+    }
+
     syncModInfo();
 }
 
@@ -190,5 +195,58 @@ bool GameManager::copyDirectory(const QString &srcPath, const QString &dstDir)
         }
     }
     return success;
+}
+
+/**
+* @author   XiaoAn
+* @brief    查找游戏路径
+* @date     2026-03-31
+**/
+QString  GameManager::findGamePath()
+{
+    // 1. 从注册表获取 Steam 路径
+    QSettings reg("HKEY_LOCAL_MACHINE\\SOFTWARE\\Valve\\Steam", QSettings::NativeFormat);
+    QString steamPath = reg.value("InstallPath").toString();
+
+    qDebug() << "steam path" << steamPath;
+    if (steamPath.isEmpty())
+        return "";
+
+    // 2. 打开库配置文件
+    QString vdfPath = steamPath + "/steamapps/libraryfolders.vdf";
+    QFile file(vdfPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return "";
+
+    QTextStream ts(&file);
+    QStringList lines = ts.readAll().split('\n');
+    file.close();
+
+    QString gamePath;
+    QString currentLib;
+
+    // 3. 逐行解析库文件夹
+    foreach (QString line , lines) {
+        line = line.trimmed().remove("\t");
+        // 读取库路径
+        if (line.startsWith("\"path\"")) {
+            QStringList parts = line.split('"');
+            if (parts.size() >= 4){
+                currentLib = parts[3].replace("\\\\", "/");
+            }
+        }
+
+        // 检查是否包含 AppID 550 (L4D2)
+        if (line.startsWith( "\"550\"" )) {
+            gamePath = currentLib + "/steamapps/common/Left 4 Dead 2";
+            break;
+        }
+    }
+
+    if(QFile(gamePath + "/left4dead2.exe").exists()){
+        return gamePath;
+    }else {
+        return "";
+    }
 }
 
