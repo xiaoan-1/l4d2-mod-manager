@@ -75,11 +75,14 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
                                                       m_modInfo.relative_path, m_modInfo.original_name));
             QFile imgFile(QString("%1/%2/%3.jpg").arg(GameManager::getInstance()->gamePath(),
                                                       m_modInfo.relative_path,m_modInfo.original_name));
-            if(!vpkFile.moveToTrash()){
+            if(vpkFile.moveToTrash()){
                 imgFile.moveToTrash();
+                SqliteObj::getInstance()->removeModInfo(m_modInfo.id);
                 QMessageBox::information(this, "提示", "已删除模组至系统回收站", QMessageBox::Ok);
                 // 由父容器来销毁
                 emit destroyCard(m_modInfo.id);
+            }else {
+                QMessageBox::warning(this, "错误", "模组删除失败！", QMessageBox::Ok);
             }
         }
     });

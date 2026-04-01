@@ -350,16 +350,29 @@ bool SqliteObj::appendModInfo(const ModInfo &modInfo)
 bool SqliteObj::removeModInfo(const int &modId)
 {
     if (modId <= 0) return false;
+    // 开启事务（确保原子性）
+    m_db.transaction();
 
-    QSqlQuery query(m_db);
-    query.prepare("DELETE FROM mod_mappings WHERE id = :mod_id");
-    query.bindValue(":mod_id", modId);
-    if (!query.exec()) {
-        qWarning() << "删除Mod信息失败：" << query.lastError().text();
+    // 删除Mod-分类关联（外键已配置CASCADE，可省略，但显式删除更安全）
+    QSqlQuery delRelQuery(m_db);
+    delRelQuery.prepare("DELETE FROM mod_category_relation WHERE mod_id = :mod_id");
+    delRelQuery.bindValue(":mod_id", modId);
+    if (!delRelQuery.exec()) {
+        m_db.rollback();
+        qWarning() << "删除Mod关联失败：" << delRelQuery.lastError().text();
+        return false;
+    }
+
+    QSqlQuery delModQuery(m_db);
+    delModQuery.prepare("DELETE FROM mod_mappings WHERE id = :mod_id");
+    delModQuery.bindValue(":mod_id", modId);
+    if (!delModQuery.exec()) {
+        m_db.rollback();
+        qWarning() << "删除Mod信息失败：" << delModQuery.lastError().text();
         return false;
     }
     // 返回是否真的删除了记录
-    return query.numRowsAffected() > 0;
+    return m_db.commit();
 }
 
 /**
