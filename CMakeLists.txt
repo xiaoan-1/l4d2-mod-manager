@@ -53,6 +53,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         README.md
         Resources.qrc
 
+        comp/paramcheckwidget.h comp/paramcheckwidget.cpp comp/paramcheckwidget.ui
+
+
 
     )
 # Define target properties for Android with Qt 6 as:

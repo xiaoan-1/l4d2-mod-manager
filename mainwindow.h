@@ -9,6 +9,7 @@
 #include "gamemanager.h"
 #include "comp/modcard.h"
 #include "comp/checkboxlistwidget.h"
+#include "comp/paramcheckwidget.h"
 #include "widget/cardcontainer.h"
 
 QT_BEGIN_NAMESPACE
@@ -57,6 +58,9 @@ private:
 
     // 操作菜单
     QMenu *m_operationMenu;
+
+    // 参数选择面板
+    ParamCheckWidget *m_paramCheckWidget;
 
     // 分类筛选列表
     CheckBoxListWidget *m_ckListWidget;

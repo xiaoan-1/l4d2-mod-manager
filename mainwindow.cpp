@@ -116,6 +116,8 @@ MainWindow::~MainWindow()
 **/
 void MainWindow::initWidget()
 {
+    m_paramCheckWidget = new ParamCheckWidget(this);
+
     // 操作菜单
     m_operationMenu = new QMenu(this);
     m_operationMenu->setWindowFlags(Qt::Popup);
@@ -124,6 +126,10 @@ void MainWindow::initWidget()
         bool isSuccess = GameManager::copyDirectory(
             QCoreApplication::applicationDirPath() + "/patch/dxvk-2.7.1", GameManager::getInstance()->gamePath());
         if(isSuccess){
+            // 启用参数
+            QList<QPair<QString, QString>> paramList;
+            paramList << qMakePair("-vulkan", "") << qMakePair("-d3d9ex", "") << qMakePair("-high", "") << qMakePair("-heapsize", "7500000");
+            m_paramCheckWidget->checkParam(paramList);
             QMessageBox::information(this, "提示", "安装成功!", QMessageBox::Ok);
         }else{
             QMessageBox::warning(this, "提示", "安装失败!", QMessageBox::Ok);
@@ -160,7 +166,7 @@ void MainWindow::initWidget()
             QDesktopServices::openUrl(QUrl::fromLocalFile(gamePath));
         }
     });
-    m_settingMenu->addAction("设置启动参数", this, &MainWindow::showGameParamDilaog);;
+    m_settingMenu->addAction("设置启动参数", m_paramCheckWidget, &ParamCheckWidget::showCenter);
 
     // 弹出设置菜单
     connect(ui->pushButton_setting, &QPushButton::clicked, this, [=](){
@@ -183,6 +189,8 @@ void MainWindow::initWidget()
         m_ckListWidget->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_categoryFilter->height());
         m_ckListWidget->show();
     });
+
+
 }
 
 /**
