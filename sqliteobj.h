@@ -45,10 +45,13 @@ public:
     bool removeCategory(const int& catId);
 
     // 获取所有Mod信息列表
-    QList<ModInfo> getModInfoList();
+    QList<ModInfo> getModInfoList(const QString &relativePath = "");
 
     // 获取指定路径和文件名的Mod文件信息
     ModInfo getModInfo(const QString &path, const QString &fileName);
+
+    // 查找对应hash的Mod信息
+    ModInfo getModInfoByHash(const QString &hash);
 
     // 添加Mod信息项
     bool appendModInfo(const ModInfo &modInfo);
@@ -56,10 +59,13 @@ public:
     // 移除Mod信息项
     bool removeModInfo(const int &modId);
 
-    // 修改Mod自定义名称
+    // 更新mod信息
+    bool updateModInfo(const ModInfo &modInfo);
+
+    // 更新Mod自定义名称
     bool updateModCustomName(const int &modId, const QString &name);
 
-    // 修改Mod相对路径
+    // 更新Mod相对路径
     bool updateModRelativePath(const int &modId, const QString &path);
 
     // 查询指定分类的Mod信息列表

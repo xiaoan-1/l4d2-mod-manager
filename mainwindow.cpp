@@ -123,7 +123,7 @@ void MainWindow::initWidget()
     m_operationMenu->setWindowFlags(Qt::Popup);
     m_operationMenu->addAction("工坊移至本地", this, &MainWindow::moveToLocal);
     m_operationMenu->addAction("安装dvxk补丁", this, [=](){
-        bool isSuccess = GameManager::getInstance()->copyDirectory(
+        bool isSuccess = GameManager::copyDirectory(
             QCoreApplication::applicationDirPath() + "/patch/dxvk-2.7.1", GameManager::getInstance()->gamePath());
         if(isSuccess){
             QMessageBox::information(this, "提示", "安装成功!", QMessageBox::Ok);
@@ -132,7 +132,7 @@ void MainWindow::initWidget()
         }
     });
     m_operationMenu->addAction("安装L4N平台", this, [=](){
-        bool isSuccess = GameManager::getInstance()->copyDirectory(
+        bool isSuccess = GameManager::copyDirectory(
             QCoreApplication::applicationDirPath() + "/patch/L4N_v2.1.6", GameManager::getInstance()->gamePath());
         if(isSuccess){
             QMessageBox::information(this, "提示", "安装成功!", QMessageBox::Ok);
@@ -176,9 +176,7 @@ void MainWindow::initWidget()
     m_ckListWidget = new CheckBoxListWidget(this);
     // 默认添加一个未分类选项
     m_ckListWidget->addOption("未分类");
-    connect(m_ckListWidget, &CheckBoxListWidget::optionCheckStateChanged, this, [=](QString categoryName, bool checked){
-        ui->cardContainer->filterCard(categoryName, checked);
-    });
+    connect(m_ckListWidget, &CheckBoxListWidget::optionCheckStateChanged, ui->cardContainer, &CardContainer::slot_setCategoryFilter);
 
     // 打开筛选面板
     connect(ui->pushButton_categoryFilter, &QPushButton::clicked, this, [=](){

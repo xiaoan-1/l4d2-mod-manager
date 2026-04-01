@@ -5,6 +5,7 @@
 #include <QMutex>
 #include <QSettings>
 #include <QFileInfoList>
+#include <QCryptographicHash>
 
 #include "sqliteobj.h"
 
@@ -24,8 +25,6 @@ GameManager::GameManager(QObject *parent)
         // 查询路径
         m_gamePath = findGamePath();
     }
-
-    syncModInfo();
 }
 
 GameManager::~GameManager()
@@ -94,8 +93,6 @@ bool GameManager::setGamePath(const QString &path)
     QSettings setting(QDir::currentPath() + "/config.ini", QSettings::IniFormat);
     setting.setValue("GamePath", m_gamePath);
 
-    syncModInfo();
-
     return true;
 }
 
@@ -114,49 +111,66 @@ void GameManager::setGameParam(const QString &gameParam)
 
 /**
 * @author   XiaoAn
-* @brief    与数据库同步Mod信息
+* @brief    扫描指定路径下的mod
 * @date     2026-02-25
 **/
-void GameManager::syncModInfo()
+QList<ModInfo> GameManager::scanDirModInfo(const QString &relativePath)
 {
     // 遍历数据库所有mod信息，丢弃不存在的文件mod信息
     QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList();
     foreach (const ModInfo &modInfo, modInfoList) {
         // 校验本地路径是否存在该mod
         QFile file(m_gamePath + modInfo.relative_path + "/" + modInfo.original_name + ".vpk");
-        // 如果不存在则在数据库删除该mod信息
+        // 如果不存在则在数据库删除该mod信息(需要该mod下的分类信息)
         if(!file.exists()){
             SqliteObj::getInstance()->removeModInfo(modInfo.id);
         }
     }
-}
 
-
-/**
-* @author   XiaoAn
-* @brief    扫描指定路径下的mod
-* @date     2026-02-25
-**/
-QList<ModInfo> GameManager::scanDirModInfo(const QString &relativePath)
-{
     QDir dir(m_gamePath + relativePath);
     QStringList filter;
     filter << "*.vpk";
     QFileInfoList fileInfoList = dir.entryInfoList(filter, QDir::Files);
 
-    QList<ModInfo> modInfoList;
+    // 获取当前相对路径下的Mod文件并进行匹配
     foreach (const QFileInfo &fileInfo, fileInfoList) {
+
         ModInfo modInfo = SqliteObj::getInstance()->getModInfo(relativePath, fileInfo.baseName());
-        if(modInfo.id == -1){
-            // 如果没有该文件的记录则添加记录
-            modInfo.relative_path = relativePath;
-            modInfo.original_name = fileInfo.baseName();
-            modInfo.custom_name = "";
-            SqliteObj::getInstance()->appendModInfo(modInfo);
+
+        // 如果没有计算hash则进行计算
+        if(modInfo.file_hash.isEmpty()){
+            modInfo.file_hash = calculateFileHash(fileInfo.absoluteFilePath());
+            SqliteObj::getInstance()->updateModInfo(modInfo);
         }
-        modInfoList.append(modInfo);
+
+        if(modInfo.id != -1){
+            continue;
+        }
+
+        // 如果没有该文件的记录则添加记录
+        modInfo.relative_path = relativePath;
+        modInfo.original_name = fileInfo.baseName();
+        modInfo.custom_name = "";
+
+        // 查询是否有相同hash的文件
+        ModInfo hashModInfo = SqliteObj::getInstance()->getModInfoByHash(modInfo.file_hash);
+
+        if(hashModInfo.id == -1){
+            // 不存在相同则添加该文件Mod信息
+            SqliteObj::getInstance()->appendModInfo(modInfo);
+        }else if(hashModInfo.relative_path == WorkshopDir){
+            // 相同的文件在工坊文件夹里，则删除当前文件不做记录，保留原来的工坊文件
+            QFile(fileInfo.absoluteFilePath()).moveToTrash();
+        }else{
+            // 不是工坊的文件则保留工坊文件，删除其他文件夹中哈希值相同的文件
+            QString hashFilePath = QString("%1/%2/%3.vpk").arg(m_gamePath, hashModInfo.relative_path, hashModInfo.original_name);
+            QFile(hashFilePath).moveToTrash();
+            // 更新mod信息
+            modInfo.id = hashModInfo.id;
+            SqliteObj::getInstance()->updateModInfo(modInfo);
+        }
     }
-    return modInfoList;
+    return SqliteObj::getInstance()->getModInfoList(relativePath);
 }
 
 /**
@@ -248,5 +262,28 @@ QString  GameManager::findGamePath()
     }else {
         return "";
     }
+}
+
+/**
+* @author   XiaoAn
+* @brief    计算文件的哈希值
+* @date     2026-03-31
+**/
+QString GameManager::calculateFileHash(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly))
+        return "";
+    QCryptographicHash hash(QCryptographicHash::Md5);
+
+    // 只读取前 128 KB
+    QByteArray bytes = file.read(128 * 1024);
+    hash.addData(bytes);
+
+    // 再加上文件大小，确保不会碰撞
+    hash.addData(QByteArray::number(file.size()));
+
+    file.close();
+    return hash.result().toHex();
 }
 

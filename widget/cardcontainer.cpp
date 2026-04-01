@@ -95,22 +95,6 @@ void CardContainer::clearModCard()
 
 /**
 * @author   XiaoAn
-* @brief    筛选卡片
-* @date     2026-03-04
-**/
-void CardContainer::filterCard(const QString &catName, bool isShow)
-{
-    if(m_categoryFilter.contains(catName)){
-        m_categoryFilter[catName] = isShow;
-    }else {
-        m_categoryFilter.insert(catName, isShow);
-    }
-
-    filterCard();
-}
-
-/**
-* @author   XiaoAn
 * @brief    设置卡片大小
 * @date     2026-03-01
 **/
@@ -186,6 +170,22 @@ void CardContainer::slot_searchCard(const QString &name)
 
 /**
 * @author   XiaoAn
+* @brief    设置分类是否显示
+* @date     2026-03-31
+**/
+void CardContainer::slot_setCategoryFilter(const QString &catName, bool isShow)
+{
+    if(m_categoryFilter.contains(catName)){
+        m_categoryFilter[catName] = isShow;
+    }else {
+        m_categoryFilter.insert(catName, isShow);
+    }
+
+    filterCard();
+}
+
+/**
+* @author   XiaoAn
 * @brief    禁用所有Mod
 * @date     2026-03-02
 **/
@@ -196,7 +196,7 @@ void CardContainer::slot_disabledAll()
 
 /**
 * @author   XiaoAn
-* @brief    过滤卡片
+* @brief    过滤卡片，同时匹配搜索和分类筛选
 * @date     2026-03-15
 **/
 void CardContainer::filterCard()

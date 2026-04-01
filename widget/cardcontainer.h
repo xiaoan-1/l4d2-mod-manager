@@ -30,9 +30,7 @@ public:
     // 清空Mod卡片
     void clearModCard();
 
-    // 筛选卡片
-    void filterCard(const QString &catName, bool isShow);
-
+public:
     // 设置卡片大小
     void setCardFixedSize(const QSize& size);
     // 设置卡片之间的间距
@@ -43,8 +41,10 @@ public:
     // 设置边距
     void setContentsMargins(int left, int top, int right, int bottom);
 
-public slots:    
+public slots:
     void slot_searchCard(const QString &name);
+
+    void slot_setCategoryFilter(const QString &catName, bool isShow);
 
     void slot_disabledAll();
 
@@ -76,9 +76,6 @@ private:
     // 图片加载器
     ImageLoader* m_imageLoader;
 
-    // 当前列数
-    int m_colCount = 0;
-
     // 卡片固定大小
     QSize m_cardSize = {300, 300};
 
@@ -91,9 +88,6 @@ private:
     int m_topMargin = 0;
     int m_rightMargin = 0;
     int m_bottomMargin = 0;
-
-    // 是否需要重新布局
-    bool m_needsLayout = true;
 };
 
 #endif // CARDCONTAINER_H

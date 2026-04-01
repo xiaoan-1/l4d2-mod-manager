@@ -78,8 +78,9 @@ bool SqliteObj::initDatabase()
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             relative_path TEXT NOT NULL,
             original_name TEXT UNIQUE NOT NULL,
-            custom_name TEXT DEFAULT '',
-            create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+            custom_name  DEFAULT '',
+            create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            file_hash TEXT UNIQUE
         );
     )";
     if (!query.exec(createTableSql)) {
@@ -102,7 +103,13 @@ bool SqliteObj::initDatabase()
     if (!query.exec(createTableSql)) {
         qWarning() << "Mod-分类映射表创建失败：" << query.lastError().text();
         return false;
-    }    
+    }
+
+    // 数据库表结构更新-添加hash值列
+    query.exec("ALTER TABLE mod_mappings ADD COLUMN file_hash TEXT DEFAULT NULL;");
+    if(!query.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_file_hash ON mod_mappings(file_hash)")){
+        qWarning() << "Mod表添加唯一索引失败!";
+    }
     return true;
 }
 
@@ -219,15 +226,25 @@ bool SqliteObj::removeCategory(const int &catId)
 * @brief    获取Mod信息列表
 * @date     2026-02-25
 **/
-QList<ModInfo> SqliteObj::getModInfoList()
+QList<ModInfo> SqliteObj::getModInfoList(const QString &relativePath)
 {
     QList<ModInfo> list;
 
     QSqlQuery query(m_db);
-    if (!query.exec("SELECT * FROM mod_mappings")) {
+
+    QString sql = "SELECT * FROM mod_mappings";
+    if(!relativePath.isEmpty()){
+        sql += " where relative_path = :relative_path";
+    }
+
+    query.prepare(sql);
+    query.bindValue(":relative_path", relativePath);
+
+    if (!query.exec()) {
         qWarning() << "获取Mod列表失败：" << query.lastError().text();
         return list;
     }
+
     while (query.next()) {
         ModInfo info;
         info.id = query.value(0).toInt();
@@ -266,6 +283,36 @@ ModInfo SqliteObj::getModInfo(const QString &path, const QString &fileName)
         info.original_name = query.value(2).toString();
         info.custom_name = query.value(3).toString();
         info.create_time = query.value(4).toDateTime();
+        info.file_hash = query.value(5).toString();
+    }
+    return info;
+}
+
+/**
+* @author   XiaoAn
+* @brief    查询指定hash的Mod信息
+* @date     2026-03-31
+**/
+ModInfo SqliteObj::getModInfoByHash(const QString &hash)
+{
+    ModInfo info;
+    if (hash.isEmpty()) return info;
+
+    QSqlQuery query(m_db);
+    query.prepare("SELECT * FROM mod_mappings WHERE file_hash = :file_hash");
+    query.bindValue(":file_hash", hash);
+    if (!query.exec() ){
+        qWarning() << "获取Mod信息失败：" << query.lastError().text();
+        return info;
+    }
+
+    if(query.next()) {
+        info.id = query.value(0).toInt();
+        info.relative_path = query.value(1).toString();
+        info.original_name = query.value(2).toString();
+        info.custom_name = query.value(3).toString();
+        info.create_time = query.value(4).toDateTime();
+        info.file_hash = query.value(5).toString();
     }
     return info;
 }
@@ -309,6 +356,31 @@ bool SqliteObj::removeModInfo(const int &modId)
     query.bindValue(":mod_id", modId);
     if (!query.exec()) {
         qWarning() << "删除Mod信息失败：" << query.lastError().text();
+        return false;
+    }
+    // 返回是否真的删除了记录
+    return query.numRowsAffected() > 0;
+}
+
+/**
+* @author   XiaoAn
+* @brief    更新mod信息
+* @date     2026-03-31
+**/
+bool SqliteObj::updateModInfo(const ModInfo &modInfo)
+{
+    QSqlQuery query(m_db);
+    query.prepare("UPDATE mod_mappings set relative_path = :relative_path, original_name = :original_name,"
+                  " custom_name = :name, create_time = :create_time, file_hash = :file_hash WHERE id = :mod_id");
+    query.bindValue(":mod_id", modInfo.id);
+    query.bindValue(":relative_path", modInfo.relative_path);
+    query.bindValue(":original_name", modInfo.original_name);
+    query.bindValue(":custom_name", modInfo.custom_name);
+    query.bindValue(":create_time", modInfo.create_time);
+    query.bindValue(":file_hash", modInfo.file_hash);
+
+    if (!query.exec()) {
+        qWarning() << "Mod信息修改失败：" << query.lastError().text();
         return false;
     }
     // 返回是否真的删除了记录

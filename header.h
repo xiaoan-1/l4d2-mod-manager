@@ -26,6 +26,7 @@ struct ModInfo {
     QString original_name;      // Mod文件名称
     QString custom_name;        // Mod自定义名称
     QDateTime create_time;      // 录入时间
+    QString file_hash;          // 文件的哈希值
 
     bool operator==(const ModInfo& other) const {
         return this->id == other.id;

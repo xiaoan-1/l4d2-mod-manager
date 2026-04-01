@@ -35,7 +35,7 @@ public:
 
 signals:
     // 选项选中状态变化
-    void optionCheckStateChanged(const QString &option, const bool &checked);
+    void optionCheckStateChanged(const QString &option, bool checked);
 
 private:
     Ui::CheckBoxListWidget *ui;

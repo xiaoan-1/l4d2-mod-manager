@@ -1,8 +1,6 @@
 #include "checkboxlistwidget.h"
 #include "ui_checkboxlistwidget.h"
 
-
-
 CheckBoxListWidget::CheckBoxListWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::CheckBoxListWidget)
