@@ -34,6 +34,16 @@ MainWindow::MainWindow(QWidget *parent)
     m_buttonGroup.addButton(ui->pushButton_conflict);
     m_buttonGroup.setExclusive(true);
 
+    // 共同行为
+    foreach (QAbstractButton *btn, m_buttonGroup.buttons()) {
+        connect(btn, &QAbstractButton::clicked, this, [=](){
+            // 重置搜索、分类过滤、刷新统计信息
+            ui->lineEdit_search->clear();
+            m_ckListWidget->resetOptionsChecked(true);
+            refreshModCount();
+        });
+    }
+
     // 导入vpk文件到本地
     connect(ui->pushButton_importMod, &QPushButton::clicked, this, &MainWindow::importMod);
 
@@ -68,32 +78,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 加载工坊Mod文件卡片
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
-        QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::WorkshopDir);
         ui->cardContainer->clearModCard();
-        ui->cardContainer->appendModCard(modInfoList);
-        // 重置过滤
-        m_ckListWidget->resetOptionsChecked(true);
-        refreshModCount();
+        ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::WorkshopDir));
     });
 
     // 加载本地Mod文件卡片
     connect(ui->pushButton_localMod, &QPushButton::clicked, this, [=](){
-        QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir);
         ui->cardContainer->clearModCard();
-        ui->cardContainer->appendModCard(modInfoList);
-        // 重置过滤
-        m_ckListWidget->resetOptionsChecked(true);
-        refreshModCount();
+        ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir));
     });
 
     // 加载禁用Mod文件卡片
     connect(ui->pushButton_trashMod, &QPushButton::clicked, this, [=](){
-        QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModTrashDir);
         ui->cardContainer->clearModCard();
-        ui->cardContainer->appendModCard(modInfoList);
-        // 重置过滤
-        m_ckListWidget->resetOptionsChecked(true);
-        refreshModCount();
+        ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::ModTrashDir));
     });
 
     // 加载冲突Mod文件卡片
@@ -206,7 +204,8 @@ void MainWindow::addCategory(const CategoryInfo &category)
         QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList(category.id);
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(modInfoList, category);
-        // 重置过滤
+        // 重置搜索、分类过滤、刷新统计信息
+        ui->lineEdit_search->clear();
         m_ckListWidget->resetOptionsChecked(true);
         refreshModCount();
     });
