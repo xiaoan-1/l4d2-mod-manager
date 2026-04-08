@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QMenu>
 #include <QPushButton>
+#include <QMouseEvent>
 #include <QLineEdit>
 
 #include "sqliteobj.h"
@@ -24,10 +25,16 @@ public:
 public:
     QPushButton* coreButton() const;
 
+    // 设置分类排序序号
+    void setCategorySort(int sort);
+
 private:
     void renameCategory();
 
     void deleteCategory();
+
+protected:
+    void mouseMoveEvent(QMouseEvent *event);
 
 signals:
     void clicked(bool checked = false);
@@ -47,6 +54,9 @@ private:
 
     // 分类信息
     CategoryInfo m_category;
+
+    // 拖拽起始位置
+    QPoint m_dragStartPos;
 };
 
 #endif // CATEGORYBUTTON_H

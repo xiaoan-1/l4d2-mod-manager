@@ -151,7 +151,7 @@ QList<CategoryInfo> SqliteObj::getCategoryList()
 
     QSqlQuery query(m_db);
 
-    if (!query.exec("SELECT * FROM categories;")) {
+    if (!query.exec("SELECT * FROM categories ORDER BY sort ASC;")) {
         qWarning() << "查询分类信息失败" << query.lastError().text();
         return categoryInfoList;
     }
@@ -619,6 +619,26 @@ bool SqliteObj::updateCategoryName(const int &catId, const QString &name)
 
     if (!query.exec()) {
         qWarning() << "分类名称修改失败：" << query.lastError().text();
+        return false;
+    }
+    // 返回是否真的修改了记录
+    return query.numRowsAffected() > 0;
+}
+
+/**
+* @author   XiaoAn
+* @brief    更新排序序号
+* @date     2026-04-08
+**/
+bool SqliteObj::updateCategorySort(const int &catId, const int &sort)
+{
+    QSqlQuery query(m_db);
+    query.prepare("UPDATE categories set sort = :sort WHERE id = :cat_id");
+    query.bindValue(":cat_id", catId);
+    query.bindValue(":sort", sort);
+
+    if (!query.exec()) {
+        qWarning() << "分类排序序号修改失败：" << query.lastError().text();
         return false;
     }
     // 返回是否真的修改了记录

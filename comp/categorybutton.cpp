@@ -1,9 +1,9 @@
 #include "categorybutton.h"
 #include "ui_categorybutton.h"
 
+#include <QDrag>
+#include <QMimeData>
 #include <QMessageBox>
-
-
 
 CategoryButton::CategoryButton(QWidget *parent)
     : QWidget(parent)
@@ -48,6 +48,19 @@ CategoryButton::CategoryButton(const CategoryInfo &category, QWidget *parent)
 QPushButton *CategoryButton::coreButton() const
 {
     return ui->pushButton_name;
+}
+
+/**
+* @author   XiaoAn
+* @brief    设置分类排序序号
+* @date     2026-04-08
+**/
+void CategoryButton::setCategorySort(int sort)
+{
+    bool ret = SqliteObj::getInstance()->updateCategorySort(m_category.id, sort);
+    if(ret){
+        m_category.sort = sort;
+    }
 }
 
 /**
@@ -106,3 +119,36 @@ void CategoryButton::deleteCategory()
         QMessageBox::warning(this, "错误", "删除失败!", QMessageBox::Ok);
     }
 }
+
+/**
+* @author   XiaoAn
+* @brief    鼠标移动启动拖拽效果
+* @date     2026-04-08
+**/
+void CategoryButton::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!(event->buttons() & Qt::LeftButton)) return;
+
+    // 计算移动距离，超过阈值才启动拖拽
+    if ((event->pos() - m_dragStartPos).manhattanLength() < QApplication::startDragDistance()) {
+        return;
+    }
+
+    // 1. 创建数据容器
+    QMimeData *mimeData = new QMimeData();
+    mimeData->setData("custom/type", QByteArray::number((qlonglong)this));
+
+    // 2. 创建拖拽对象
+    QDrag *drag = new QDrag(this);
+    drag->setMimeData(mimeData);
+
+    // 3. 设置视觉反馈
+    QPixmap pixmap = grab();
+    drag->setPixmap(pixmap);
+    drag->setHotSpot(QPoint(pixmap.width() / 2, pixmap.height() / 2));
+
+    // 4. 执行拖拽效果
+    drag->exec(Qt::MoveAction | Qt::CopyAction);
+}
+
+

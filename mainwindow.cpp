@@ -200,11 +200,8 @@ void MainWindow::initWidget()
 **/
 void MainWindow::addCategory(const CategoryInfo &category)
 {
-    // 1、生成分类按钮
-    CategoryButton *btn = new CategoryButton(category, this);
+    CategoryButton *btn = ui->widget_category->appendCategory(category);
     m_buttonGroup.addButton(btn->coreButton());
-    QVBoxLayout *vboxLayout = qobject_cast<QVBoxLayout*>(ui->categoryList->layout());
-    vboxLayout->insertWidget(vboxLayout->count() - 1, btn);
 
     // 绑定点击事件
     connect(btn, &CategoryButton::clicked, this, [=](){

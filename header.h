@@ -17,6 +17,10 @@ struct CategoryInfo
     bool operator==(const CategoryInfo& other) const {
         return this->id == other.id;
     }
+
+    bool operator>(const CategoryInfo& other) const {
+        return this->sort > other.sort;
+    }
 };
 
 // Mod信息结构体

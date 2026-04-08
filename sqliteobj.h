@@ -83,6 +83,9 @@ public:
     // 更新分类名称
     bool updateCategoryName(const int &catId, const QString &name);
 
+    // 更新分类排序
+    bool updateCategorySort(const int &catId, const int &sort);
+
 private:
     // 静态单例实例
     static SqliteObj* m_instance;

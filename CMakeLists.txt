@@ -54,6 +54,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         Resources.qrc
 
         comp/paramcheckwidget.h comp/paramcheckwidget.cpp comp/paramcheckwidget.ui
+        widget/categorylistwidget.h widget/categorylistwidget.cpp widget/categorylistwidget.ui
 
 
 
