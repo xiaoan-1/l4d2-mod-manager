@@ -1,6 +1,8 @@
 #include "cardcontainer.h"
 #include "ui_cardcontainer.h"
 
+#include <QSettings>
+
 #include "gamemanager.h"
 
 CardContainer::CardContainer(QWidget *parent)
@@ -45,7 +47,6 @@ void CardContainer::updateModCard()
 **/
 void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const CategoryInfo &category)
 {
-    QString gamePath = GameManager::getInstance()->gamePath();
     foreach (const ModInfo &modInfo, modInfoList) {
         ModCard *modCard = new ModCard(modInfo, ui->centralwidget);
         modCard->setCurrentCategory(category);
@@ -53,12 +54,6 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
 
         // 卡片销毁或者隐藏时触发布局更新
         connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
-        // 提交Mod卡片图片加载任务
-        ImageLoader::Task task;
-        task.id = modInfo.id;
-        task.imagePath = gamePath + modInfo.relative_path + "/" + modInfo.original_name + ".jpg";
-        task.targetSize = modCard->getImageSize();
-        m_imageLoader->addTask(task);
     }
     // 更新布局
     updateLayout();
@@ -159,13 +154,24 @@ void CardContainer::setContentsMargins(int left, int top, int right, int bottom)
 
 /**
 * @author   XiaoAn
+* @brief    是否显示禁用Mod
+* @date     2026-04-12
+**/
+void CardContainer::setDisabledVisiable(bool visiable)
+{
+    m_disabledVisiable = visiable;
+    updateLayout();
+}
+
+/**
+* @author   XiaoAn
 * @brief    搜索卡片
 * @date     2026-03-01
 **/
 void CardContainer::slot_searchCard(const QString &name)
 {
     m_searchFilter = name;
-    filterCard();
+    updateLayout();
 }
 
 /**
@@ -181,18 +187,9 @@ void CardContainer::slot_setCategoryFilter(const QString &catName, bool isShow)
         m_categoryFilter.insert(catName, isShow);
     }
 
-    filterCard();
+    updateLayout();
 }
 
-/**
-* @author   XiaoAn
-* @brief    禁用所有Mod
-* @date     2026-03-02
-**/
-void CardContainer::slot_disabledAll()
-{
-
-}
 
 /**
 * @author   XiaoAn
@@ -204,6 +201,12 @@ void CardContainer::filterCard()
     // 先获取筛选后的卡片列表
     for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
         ModCard *modCard = it.value();
+
+        // 是否不显示禁用mod
+        if(!m_disabledVisiable && modCard->modInfo().relative_path == GameManager::ModTrashDir){
+            modCard->setVisible(false);
+            continue;
+        }
 
         // 该Mod卡片的分类是否被过滤
         bool isFiltered = false;
@@ -241,8 +244,6 @@ void CardContainer::filterCard()
             modCard->setVisible(false);
         }
     }
-
-    updateLayout();
 }
 
 /**
@@ -253,6 +254,9 @@ void CardContainer::filterCard()
 void CardContainer::updateLayout()
 {
     if (m_modCardMap.isEmpty()) return;
+
+    // 应用过滤条件
+    filterCard();
 
     // 计算每行可以容纳的卡片数量(列数)
     int availableWidth = width() - m_leftMargin - m_rightMargin;
@@ -272,6 +276,16 @@ void CardContainer::updateLayout()
         ModCard *modCard = it.value();
 
         if (!modCard->isVisibleTo(this)) continue;
+
+        if(!modCard->isLoadedImage()){
+            // 提交Mod卡片图片加载任务
+            ImageLoader::Task task;
+            task.id = modCard->modInfo().id;
+            task.imagePath = QString("%1/%2/%3.jpg").arg( GameManager::getInstance()->gamePath(),
+                                                         modCard->modInfo().relative_path , modCard->modInfo().original_name);
+            task.targetSize = modCard->getImageSize();
+            m_imageLoader->addTask(task);
+        }
 
         // 移动卡片到新位置
         modCard->move(x, y);

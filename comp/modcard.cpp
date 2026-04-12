@@ -16,7 +16,6 @@ ModCard::ModCard(QWidget *parent)
 {
     ui->setupUi(this);
 
-    show();
     setFixedSize(300, 300);
 }
 
@@ -123,6 +122,16 @@ void ModCard::loadImage(const QImage &image)
     // 设置图片
     ui->label_img->setPixmap(QPixmap::fromImage(image));
     ui->label_img->setAlignment(Qt::AlignCenter);
+}
+
+/**
+* @author   XiaoAn
+* @brief    是否已加载图片
+* @date     2026-04-13
+**/
+bool ModCard::isLoadedImage()
+{
+    return !ui->label_img->pixmap().isNull();
 }
 
 /**

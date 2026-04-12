@@ -67,5 +67,8 @@ private:
 
     // 互斥选择按钮
     QButtonGroup m_buttonGroup;
+
+    // 是否显示禁用Mod
+    bool m_disableModVisiable = true;
 };
 #endif // MAINWINDOW_H

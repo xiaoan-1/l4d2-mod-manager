@@ -441,7 +441,7 @@ bool ImageLoader::loadImageFromFile(const Task &task, QImage &outImage, QString 
     }
 
     // 检查文件大小（可选）
-    if (fileInfo.size() > 100 * 1024 * 1024) {  // 超过100MB
+    if (fileInfo.size() > 10 * 1024 * 1024) {  // 超过10MB
         errorMsg = QString("文件太大: %1 MB").arg(fileInfo.size() / 1024 / 1024);
         return false;
     }

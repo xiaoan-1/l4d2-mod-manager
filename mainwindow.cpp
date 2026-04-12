@@ -25,6 +25,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowTitle("L4D2-Mod管理工具");
 
+    // 是否显示禁用mod
+    QSettings settings(QCoreApplication::applicationDirPath() + "/config.ini");
+    m_disableModVisiable = settings.value("DisabledModVisiable").toBool();
+
+
     initWidget();
 
     // 全局互斥选中按钮
@@ -37,9 +42,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 共同行为
     foreach (QAbstractButton *btn, m_buttonGroup.buttons()) {
         connect(btn, &QAbstractButton::clicked, this, [=](){
-            // 重置搜索、分类过滤、刷新统计信息
+            // 重置搜索、刷新统计信息
             ui->lineEdit_search->clear();
-            m_ckListWidget->resetOptionsChecked(true);
             refreshModCount();
         });
     }
@@ -80,18 +84,24 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::WorkshopDir));
+        ui->checkBox_isDisabled->setDisabled(false);
+        ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
     });
 
     // 加载本地Mod文件卡片
     connect(ui->pushButton_localMod, &QPushButton::clicked, this, [=](){
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir));
+        ui->checkBox_isDisabled->setDisabled(false);
+        ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
     });
 
     // 加载禁用Mod文件卡片
     connect(ui->pushButton_trashMod, &QPushButton::clicked, this, [=](){
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::ModTrashDir));
+        ui->checkBox_isDisabled->setDisabled(true);
+        ui->cardContainer->setDisabledVisiable(true);
     });
 
     // 加载冲突Mod文件卡片
@@ -99,6 +109,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 搜索Mod
     connect(ui->lineEdit_search, &QLineEdit::textChanged, ui->cardContainer, &CardContainer::slot_searchCard);
+
+    // 是否显示禁用mod
+    connect(ui->checkBox_isDisabled, &QCheckBox::checkStateChanged, ui->cardContainer, [=](bool isChecked){
+        // 写入配置
+        QSettings settings(QCoreApplication::applicationDirPath() + "/config.ini");
+        settings.setValue("DisabledModVisiable", isChecked);
+        m_disableModVisiable = isChecked;
+        ui->cardContainer->setDisabledVisiable(isChecked);
+    });
+    ui->checkBox_isDisabled->setChecked(m_disableModVisiable);
 
     // 默认刷新
     emit ui->pushButton_workshop->clicked();
@@ -190,7 +210,6 @@ void MainWindow::initWidget()
         m_ckListWidget->show();
     });
 
-
 }
 
 /**
@@ -205,6 +224,8 @@ void MainWindow::addCategory(const CategoryInfo &category)
 
     // 绑定点击事件
     connect(btn, &CategoryButton::clicked, this, [=](){
+        ui->checkBox_isDisabled->setDisabled(false);
+        ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
         // 查询该分类的Mod信息
         QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList(category.id);
         ui->cardContainer->clearModCard();
@@ -370,13 +391,13 @@ void MainWindow::startGame()
 **/
 void MainWindow::importMod()
 {
-    QString filePath = QFileDialog::getOpenFileName(this, "选择vpk文件", QDir::homePath(), "(*.vpk)");
-    if(filePath.isEmpty()) return;
+    QStringList filePathList = QFileDialog::getOpenFileNames(this, "选择vpk文件", QDir::homePath(), "(*.vpk)");
+    if(filePathList.isEmpty()) return;
 
-    QFileInfo fileInfo(filePath);
-    QString gamePath = GameManager::getInstance()->gamePath();
-    if(!QFile(filePath).rename(QString("%1/%2/%3").arg(gamePath, GameManager::ModLocalDir, fileInfo.fileName()))){
-        QMessageBox::warning(this, "错误", "导入失败!", QMessageBox::Ok);
+    foreach (const auto &filePath, filePathList) {
+        QFileInfo fileInfo(filePath);
+        QString gamePath = GameManager::getInstance()->gamePath();
+        QFile(filePath).copy(QString("%1/%2/%3").arg(gamePath, GameManager::ModLocalDir, fileInfo.fileName()));
     }
 }
 
@@ -416,6 +437,7 @@ void MainWindow::moveToLocal()
 **/
 void MainWindow::checkConflictMod()
 {
+    ui->checkBox_isDisabled->setDisabled(true);
     QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir);
 
     QString gamePath = GameManager::getInstance()->gamePath();

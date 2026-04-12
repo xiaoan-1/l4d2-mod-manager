@@ -29,6 +29,9 @@ public:
     // 加载图片
     void loadImage(const QImage &image);
 
+    // 是否已加载图片
+    bool isLoadedImage();
+
     // 刷新
     void updateModInfo();
 

@@ -15,8 +15,18 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">QLabel {
+    <string notr="true">QLabel, QCheckBox {
 	color: #fff;
+}
+
+QCheckBox:disabled {
+    color: gray;
+}
+
+QCheckBox::indicator:disabled {
+    background-color: rgb(33, 33, 33);
+    border: 1px solid #a0a0a0;
+	border-radius: 3px;
 }
 
 QMessageBox{background-color: rgb(30, 41, 59);}
@@ -312,6 +322,16 @@ font-weight: bold;</string>
          <property name="icon">
           <iconset resource="Resources.qrc">
            <normaloff>:/resources/classify.png</normaloff>:/resources/classify.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_isDisabled">
+         <property name="text">
+          <string>显示禁用</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

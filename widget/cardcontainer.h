@@ -41,12 +41,13 @@ public:
     // 设置边距
     void setContentsMargins(int left, int top, int right, int bottom);
 
-public slots:
+    // 是否显示禁用mod
+    void setDisabledVisiable(bool visiable);
+
+public slots:    
     void slot_searchCard(const QString &name);
 
     void slot_setCategoryFilter(const QString &catName, bool isShow);
-
-    void slot_disabledAll();
 
 private:
     // 过滤卡片
@@ -69,6 +70,9 @@ private:
 
     // 查询过滤
     QString m_searchFilter;
+
+    // 是否显示禁用mod
+    bool m_disabledVisiable = true;
 
     // 分类筛选过滤
     QMap<QString, bool> m_categoryFilter;
