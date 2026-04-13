@@ -58,6 +58,26 @@ void CheckBoxListWidget::addOptions(const QStringList &options)
 
 /**
 * @author   XiaoAn
+* @brief    默认项
+* @date     2026-04-13
+**/
+void CheckBoxListWidget::addDefaultOption(const QString &option)
+{
+    QVBoxLayout *vboxLayout = qobject_cast<QVBoxLayout*>(ui->scrollWidget->layout());
+
+    QCheckBox *checkBox = new QCheckBox(option);
+    checkBox->setChecked(true);
+    connect(checkBox, &QCheckBox::checkStateChanged, this, [=](bool checked){
+        emit optionCheckStateChanged(checkBox->text(), checked);
+    });
+
+    m_defaultOption.append(checkBox);
+
+    vboxLayout->insertWidget(m_defaultOption.size() - 1, checkBox);
+}
+
+/**
+* @author   XiaoAn
 * @brief    移除选项
 * @date     2026-03-04
 **/

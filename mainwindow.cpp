@@ -199,7 +199,7 @@ void MainWindow::initWidget()
     // 筛选面板
     m_ckListWidget = new CheckBoxListWidget(this);
     // 默认添加一个未分类选项
-    m_ckListWidget->addOption("未分类");
+    m_ckListWidget->addDefaultOption("未分类");
     connect(m_ckListWidget, &CheckBoxListWidget::optionCheckStateChanged, ui->cardContainer, &CardContainer::slot_setCategoryFilter);
 
     // 打开筛选面板

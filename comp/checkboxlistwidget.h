@@ -21,6 +21,9 @@ public:
     void addOption(const QString &option);
     void addOptions(const QStringList &options);
 
+    // 添加默认项
+    void addDefaultOption(const QString &option);
+
     // 移除选项
     void removeOption(const QString &option);
 
@@ -39,6 +42,9 @@ signals:
 
 private:
     Ui::CheckBoxListWidget *ui;
+
+    // 默认选项
+    QList<QCheckBox* > m_defaultOption;
 
     // 控件列表
     QList<QCheckBox* > m_checkBoxList;
