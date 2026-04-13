@@ -15,7 +15,7 @@
 #include <tlhelp32.h>
 #include "comp/categorydialog.h"
 #include "comp/categorybutton.h"
-#include "utils/modconflictdetector.h"
+#include "utils/vpkfileparser.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -442,22 +442,22 @@ void MainWindow::checkConflictMod()
 
     QString gamePath = GameManager::getInstance()->gamePath();
 
+    // 解析所有vpk文件
+    QList<VpkFileParser> vpkFileList;
+    foreach (const ModInfo &modInfo, modInfoList) {
+        QString filePath = QString("%1/%2/%3.vpk").arg(gamePath, modInfo.relative_path, modInfo.original_name);
+        vpkFileList.append(VpkFileParser(filePath));
+    }
+
+    // 检测冲突
     QList<ModInfo> conflictModList;
-    for (int i = 0; i < modInfoList.size(); ++i) {
-        for (int j = i + 1; j < modInfoList.size(); ++j) {
-            ModInfo modInfo1 = modInfoList.at(i);
-            ModInfo modInfo2 = modInfoList.at(j);
-            QString filePath1 = QString("%1/%2/%3.vpk").arg(gamePath, modInfo1.relative_path, modInfo1.original_name);
-
-            QString filePath2 = QString("%1/%2/%3.vpk").arg(gamePath, modInfo2.relative_path, modInfo2.original_name);
-
-            if(ModConflictDetector::checkConflict(filePath1, filePath2)){
-                if(!conflictModList.contains(modInfo1)){
-                    conflictModList.append(modInfo1);
-                }
-                if(!conflictModList.contains(modInfo2)){
-                    conflictModList.append(modInfo2);
-                }
+    for (int i = 0; i < vpkFileList.size(); ++i) {
+        for (int j = i + 1; j < vpkFileList.size(); ++j) {
+            VpkFileParser vpkFile1 = vpkFileList[i];
+            VpkFileParser vpkFile2 = vpkFileList[j];
+            if(vpkFile1.checkConflict(vpkFile2)){
+                conflictModList.append(modInfoList.at(i));
+                conflictModList.append(modInfoList.at(j));
             }
         }
     }

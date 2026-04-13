@@ -35,6 +35,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(l4d2-mod-manager
         MANUAL_FINALIZATION
@@ -47,7 +48,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         comp/categorybutton.h comp/categorybutton.cpp comp/categorybutton.ui
         comp/checkboxlistwidget.h comp/checkboxlistwidget.cpp comp/checkboxlistwidget.ui
         utils/imageloader.h utils/imageloader.cpp
-        utils/modconflictdetector.h utils/modconflictdetector.cpp
+
         widget/cardcontainer.h widget/cardcontainer.cpp widget/cardcontainer.ui
         widget/moddetailwidget.h widget/moddetailwidget.cpp widget/moddetailwidget.ui
         README.md
@@ -55,6 +56,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
         comp/paramcheckwidget.h comp/paramcheckwidget.cpp comp/paramcheckwidget.ui
         widget/categorylistwidget.h widget/categorylistwidget.cpp widget/categorylistwidget.ui
+        utils/vpkfileparser.h utils/vpkfileparser.cpp
 
 
 
@@ -80,6 +82,7 @@ endif()
 target_link_libraries(l4d2-mod-manager PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Sql)
+target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
 target_link_libraries(l4d2-mod-manager PRIVATE Qt6::Core)
