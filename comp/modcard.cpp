@@ -16,7 +16,7 @@ ModCard::ModCard(QWidget *parent)
 {
     ui->setupUi(this);
 
-    setFixedSize(300, 300);
+    setFixedSize(320, 300);
 }
 
 ModCard::~ModCard()
