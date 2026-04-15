@@ -9,6 +9,7 @@
 #include <QLineEdit>
 
 #include "../gamemanager.h"
+#include "../utils/vpkfileparser.h"
 
 ModCard::ModCard(QWidget *parent)
     : QWidget(parent)
@@ -85,6 +86,8 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
             }
         }
     });
+
+
 }
 
 /**
@@ -141,25 +144,33 @@ bool ModCard::isLoadedImage()
 **/
 void ModCard::updateModInfo()
 {
+    QString filePath = QString("%1/%2/%3.vpk").
+                       arg(GameManager::getInstance()->gamePath(), m_modInfo.relative_path, m_modInfo.original_name);
+
+    m_addonInfoMap = VpkFileParser(filePath).getAddonInfo();
     // 备注名称
-    if(m_modInfo.custom_name.isEmpty()){
-        ui->label_name->setText(m_modInfo.original_name);
-        ui->label_name->setToolTip(m_modInfo.original_name);
-    }else{
+    QString addontitle = m_addonInfoMap.value("addontitle");
+    if(!m_modInfo.custom_name.isEmpty()){
         ui->label_name->setText(m_modInfo.custom_name);
         ui->label_name->setToolTip(m_modInfo.custom_name);
+    }else if(!addontitle.isEmpty()){
+        ui->label_name->setText(addontitle);
+        ui->label_name->setToolTip(addontitle);
+    }else{
+        ui->label_name->setText(m_modInfo.original_name);
+        ui->label_name->setToolTip(m_modInfo.original_name);
     }
 
-    QString baseDir = GameManager::getInstance()->gamePath() + m_modInfo.relative_path;
-
     // 文件大小
-    QFile modFile(baseDir + "/" + m_modInfo.original_name + ".vpk");
+    QFile modFile(filePath);
     if(modFile.exists()){
         QString sizeStr = GameManager::getFileSizeWithUnit(modFile.size());
         ui->label_size->setText(sizeStr);
     }else {
         ui->label_size->setText("0kb");
     }
+
+
 
 
     // 获取所有分类列表

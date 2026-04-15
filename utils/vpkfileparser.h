@@ -30,9 +30,9 @@ struct VPKFileEntry {
     QString path;               // 文件路径
     QString baseName;           // 文件名称
     QString extension;          // 文件后缀
-    uint32_t crc32;             // 文件 CRC32
-    uint32_t entryLength;       // 文件原始总大小（字节）
-    uint16_t preloadBytes;      // 预加载数据大小（字节）
+    quint32 crc32;             // 文件 CRC32
+    quint32 entryLength;       // 文件原始总大小（字节）
+    quint16 preloadBytes;      // 预加载数据大小（字节）
     qint64 preloadOffset;       // 预加载数据在文件中的偏移（若无则为 -1）
     qint64 remainingOffset;     // 剩余数据在文件中的偏移（若无则为 -1）
 };
@@ -43,11 +43,18 @@ public:
     explicit VpkFileParser(const QString &filePath);
 
 public:
+    // 检测冲突
+    static QList<QPair<int, int>> detectConflicts(const QList<VpkFileParser> &vpkFileList);
+
+    // 获取文件条目数据
+    QByteArray getEntryFileData(const QString &filePath);
+
+    // 获取模组信息
+    QMap<QString, QString> getAddonInfo();
+
+public:
     // 获取vpk文件内部文件条目信息
     QList<VPKFileEntry> entries() const { return m_entries; } ;
-
-    // 检测冲突
-    bool checkConflict(const VpkFileParser &vpkFile);
 
 private:
     // 解析文件

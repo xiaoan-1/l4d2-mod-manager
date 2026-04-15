@@ -53,8 +53,6 @@ public:
     // 获取图片大小
     QSize getImageSize();
 
-
-
 private:
     // 备注
     void remark();
@@ -101,6 +99,9 @@ private:
 
     // 已分类的分类信息
     QList<CategoryInfo> m_classifiedList;
+
+    // 模组信息
+    QMap<QString, QString> m_addonInfoMap;
 };
 
 #endif // MODCARD_H

@@ -449,17 +449,17 @@ void MainWindow::checkConflictMod()
         vpkFileList.append(VpkFileParser(filePath));
     }
 
-    // 检测冲突
+    QList<QPair<int, int>> conflictPairs = VpkFileParser::detectConflicts(vpkFileList);
+
+    QSet<int> conflicts;
+    foreach (const auto &pair, conflictPairs) {
+        conflicts.insert(pair.first);
+        conflicts.insert(pair.second);
+    }
+
     QList<ModInfo> conflictModList;
-    for (int i = 0; i < vpkFileList.size(); ++i) {
-        for (int j = i + 1; j < vpkFileList.size(); ++j) {
-            VpkFileParser vpkFile1 = vpkFileList[i];
-            VpkFileParser vpkFile2 = vpkFileList[j];
-            if(vpkFile1.checkConflict(vpkFile2)){
-                conflictModList.append(modInfoList.at(i));
-                conflictModList.append(modInfoList.at(j));
-            }
-        }
+    foreach (const auto &conflict, conflicts) {
+        conflictModList.append(modInfoList[conflict]);
     }
 
     ui->cardContainer->clearModCard();
