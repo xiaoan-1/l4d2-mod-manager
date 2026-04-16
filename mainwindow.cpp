@@ -25,6 +25,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowTitle("L4D2-Mod管理工具");
 
+    // 游戏路径设置提醒
+    QString gamePath = GameManager::getInstance()->gamePath();
+    if(!QDir(gamePath).exists()){
+        QMessageBox::warning(this, "提示", "游戏路径不存在，请在右上角手动设置游戏路径", QMessageBox::Ok);
+    }
+
     // 是否显示禁用mod
     QSettings settings(QCoreApplication::applicationDirPath() + "/config.ini");
     m_disableModVisiable = settings.value("DisabledModVisiable").toBool();
