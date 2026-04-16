@@ -57,7 +57,9 @@ private:
     void updateLayout();
 
 private slots:
-    void onImageLoaded(const int& modId, const QImage& image, bool fromCache);
+    void onImageLoaded(int modId, const QImage& image, bool fromCache);
+
+    void onImageFailed(int modId, const QString& errorStr);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

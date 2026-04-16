@@ -15,7 +15,7 @@ CardContainer::CardContainer(QWidget *parent)
     m_imageLoader = new ImageLoader();
     // 连接信号
     connect(m_imageLoader, &ImageLoader::imageLoaded, this, &CardContainer::onImageLoaded, Qt::QueuedConnection);
-
+    connect(m_imageLoader, &ImageLoader::imageLoadFailed, this, &CardContainer::onImageFailed, Qt::QueuedConnection);
     m_imageLoader->start();
 
 }
@@ -304,19 +304,29 @@ void CardContainer::updateLayout()
     setFixedHeight(maxY + m_bottomMargin);
 }
 
-
-
 /**
 * @author   XiaoAn
 * @brief    加载图片
 * @date     2026-02-28
 **/
-void CardContainer::onImageLoaded(const int &modId, const QImage &image, bool fromCache)
+void CardContainer::onImageLoaded(int modId, const QImage &image, bool fromCache)
 {
     if (!m_modCardMap.contains(modId)) return;
     // 更新卡片图片
     m_modCardMap.value(modId)->loadImage(image);
 }
+
+/**
+* @author   XiaoAn
+* @brief    图片加载失败
+* @date     2026-04-16
+**/
+void CardContainer::onImageFailed(int modId, const QString &errorStr)
+{
+    if (!m_modCardMap.contains(modId)) return;
+    m_modCardMap.value(modId)->setImageErrorText(errorStr);
+}
+
 
 /**
 * @author   XiaoAn

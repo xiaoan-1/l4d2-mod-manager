@@ -91,6 +91,7 @@ QByteArray VpkFileParser::getEntryFileData(const QString &filePath)
         return data;
     }
     data.reserve(fileEntry.entryLength);
+
     // 读取预加载数据
     if (fileEntry.preloadBytes > 0 && fileEntry.preloadOffset >= 0) {
         if (file.seek(fileEntry.preloadOffset)) {
@@ -107,6 +108,7 @@ QByteArray VpkFileParser::getEntryFileData(const QString &filePath)
             data.append(remaining);
         }
     }
+    file.close();
     return data;
 }
 
@@ -119,7 +121,6 @@ QMap<QString, QString> VpkFileParser::getAddonInfo()
 {
     QMap<QString, QString> result;
     QString content = QString::fromUtf8(getEntryFileData("/addoninfo.txt"));
-
     if(content.isEmpty()) return result;
 
     // 1. 截取大括号内部的内容
@@ -224,7 +225,10 @@ bool VpkFileParser::parse()
                 in >> dirEntry.crc >> dirEntry.preloadBytes >> dirEntry.archiveIndex
                     >> dirEntry.entryOffset >> dirEntry.entryLength >> dirEntry.terminator;
 
-                // 跳过预加载数据（如果有）
+                // 记录预加载数据的起始偏移（当前文件指针位置）
+                qint64 preloadStart = file.pos();
+
+                // 跳过预加载数据
                 if (dirEntry.preloadBytes > 0) {
                     file.seek(file.pos() + dirEntry.preloadBytes);
                 }
@@ -238,13 +242,13 @@ bool VpkFileParser::parse()
                 // 完整数据大小(预加载数据大小 + 文件数据区大小)
                 fileEntry.entryLength = dirEntry.entryLength;
                 // 预加载数据偏移量和大小
-                fileEntry.preloadOffset = file.pos();
+                fileEntry.preloadOffset = preloadStart;
                 fileEntry.preloadBytes = dirEntry.preloadBytes;
                 if (dirEntry.archiveIndex == 0x7FFF) {
                     // 文件数据区剩余数据偏移量（相对于文件数据区起始位置）
                     fileEntry.remainingOffset = 12 + m_vpkHeader.treeSize + dirEntry.entryOffset;
                 }else{
-                    fileEntry.remainingOffset = -1;
+                    fileEntry.remainingOffset = 0;
                 }
                 m_entries.append(fileEntry);
             }

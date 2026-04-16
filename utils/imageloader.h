@@ -111,9 +111,9 @@ public:
 
 signals:
     // 图片加载完毕
-    void imageLoaded(const int& taskId, const QImage& image, bool fromCache);
+    void imageLoaded(int taskId, const QImage& image, bool fromCache);
     // 图片加载失败
-    void imageLoadFailed(const int& taskId, const QString& error);
+    void imageLoadFailed(int taskId, const QString& error);
     // 任务进度
     void taskProgress(int pending, int active, int completed);
     // 任务数量变化

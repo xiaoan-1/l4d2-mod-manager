@@ -120,7 +120,7 @@ void ModCard::setCurrentCategory(const CategoryInfo &category)
 **/
 void ModCard::loadImage(const QImage &image)
 {
-    if (image.isNull()) return;
+    if (image.isNull() || !ui->label_img->pixmap().isNull()) return;
 
     // 设置图片
     ui->label_img->setPixmap(QPixmap::fromImage(image));
@@ -255,6 +255,16 @@ bool ModCard::hasCategory(const QString &catName)
 QSize ModCard::getImageSize()
 {
     return ui->label_img->size();
+}
+
+/**
+* @author   XiaoAn
+* @brief    设置图片加载失败信息
+* @date     2026-04-16
+**/
+void ModCard::setImageErrorText(const QString &errorStr)
+{
+    ui->label_img->setText(errorStr);
 }
 
 /**

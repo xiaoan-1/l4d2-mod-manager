@@ -1,9 +1,13 @@
 #include "imageloader.h"
 
+#include <QDir>
+#include <QBuffer>
 #include <QDateTime>
 #include <QFileInfo>
 #include <QImageReader>
 #include <QDebug>
+
+#include "./vpkfileparser.h"
 
 ImageLoader::ImageLoader(QObject *parent)
     : QObject{parent}
@@ -434,25 +438,40 @@ bool ImageLoader::loadImageFromFile(const Task &task, QImage &outImage, QString 
 {
     QFileInfo fileInfo(task.imagePath);
 
-    // 检查文件是否存在
+    // 检查图片文件是否存在
     if (!fileInfo.exists()) {
-        errorMsg = QString("文件不存在: %1").arg(task.imagePath);
-        return false;
+        // 转为解析vpk内部图片数据
+        QString vpkFilePath = QString("%1/%2.vpk").arg(fileInfo.dir().absolutePath(), fileInfo.baseName());
+        fileInfo.setFile(vpkFilePath);
+        if(!fileInfo.exists()){
+            errorMsg = "[ERROR] 文件不存在";
+            return false;
+        }
     }
-
-    // 检查文件大小（可选）
-    if (fileInfo.size() > 10 * 1024 * 1024) {  // 超过10MB
-        errorMsg = QString("文件太大: %1 MB").arg(fileInfo.size() / 1024 / 1024);
-        return false;
-    }
-
-    // 使用QImageReader获取更多控制
-    QImageReader reader(task.imagePath);
-
+    QImageReader reader;
     // 设置读取选项
-    reader.setAutoTransform(true);  // 自动旋转
+    reader.setFormat("jpg");
+    reader.setAutoTransform(true);
     reader.setDecideFormatFromContent(true);
 
+    QBuffer buffer;
+    QByteArray imageData;
+    if(fileInfo.suffix() == "jpg"){
+        // 直接读取jpg图像
+        reader.setFileName(task.imagePath);
+    }else if (fileInfo.suffix() == "vpk"){
+        // 读取vpk内部图像数据
+        VpkFileParser vpkFile(fileInfo.absoluteFilePath());
+        imageData = vpkFile.getEntryFileData("/addonimage.jpg");
+        if(imageData.isEmpty()){
+            errorMsg = "[ERROR] 未读取到vpk内部图片";
+            return false;
+        }
+        // 使用 QBuffer 将 QByteArray 包装为 QIODevice
+        buffer.setBuffer(&imageData);
+        buffer.open(QIODevice::ReadOnly);
+        reader.setDevice(&buffer);
+    }
     // 如果有目标大小，可以先读取缩略图提高效率
     if (!task.targetSize.isEmpty() && task.targetSize.width() > 0) {
         QSize imageSize = reader.size();
@@ -464,10 +483,9 @@ bool ImageLoader::loadImageFromFile(const Task &task, QImage &outImage, QString 
     }
     // 读取图片
     if (!reader.read(&outImage)) {
-        errorMsg = reader.errorString();
+        errorMsg = "[ERROR] 图像数据解析失败！";
         return false;
     }
-
     return true;
 }
 

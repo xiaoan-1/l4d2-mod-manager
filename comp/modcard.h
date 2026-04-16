@@ -53,6 +53,9 @@ public:
     // 获取图片大小
     QSize getImageSize();
 
+    // 设置图片错误信息
+    void setImageErrorText(const QString &errorStr);
+
 private:
     // 备注
     void remark();

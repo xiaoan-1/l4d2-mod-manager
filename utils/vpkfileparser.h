@@ -3,6 +3,7 @@
 
 #include <QList>
 #include <QString>
+#include <QPixmap>
 
 // VPK文件头
 struct VPKHeader {
@@ -33,8 +34,8 @@ struct VPKFileEntry {
     quint32 crc32;             // 文件 CRC32
     quint32 entryLength;       // 文件原始总大小（字节）
     quint16 preloadBytes;      // 预加载数据大小（字节）
-    qint64 preloadOffset;       // 预加载数据在文件中的偏移（若无则为 -1）
-    qint64 remainingOffset;     // 剩余数据在文件中的偏移（若无则为 -1）
+    quint64 preloadOffset;       // 预加载数据在文件中的偏移
+    quint64 remainingOffset;     // 剩余数据在文件中的偏移
 };
 
 class VpkFileParser
