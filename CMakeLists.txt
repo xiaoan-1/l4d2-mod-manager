@@ -60,6 +60,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
 
 
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET l4d2-mod-manager APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

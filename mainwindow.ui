@@ -72,8 +72,8 @@ QScrollArea{border: 0px; background-color: transparent;}
 #pushButton_startGame{
 	color: #000;
 	border-radius: 15px;
-	font-size: 22px;
 	font-weight: bold;
+	font-size: 22px;
 	background: #ffdb29;
 }
 #pushButton_startGame:hover{

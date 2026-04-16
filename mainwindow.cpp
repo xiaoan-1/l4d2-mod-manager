@@ -42,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 共同行为
     foreach (QAbstractButton *btn, m_buttonGroup.buttons()) {
         connect(btn, &QAbstractButton::clicked, this, [=](){
+            ui->checkBox_isDisabled->setDisabled(true);
+            ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
             // 重置搜索、刷新统计信息
             ui->lineEdit_search->clear();
             refreshModCount();
@@ -84,23 +86,18 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButton_workshop, &QPushButton::clicked, this, [=](){
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::WorkshopDir));
-        ui->checkBox_isDisabled->setDisabled(false);
-        ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
     });
 
     // 加载本地Mod文件卡片
     connect(ui->pushButton_localMod, &QPushButton::clicked, this, [=](){
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir));
-        ui->checkBox_isDisabled->setDisabled(false);
-        ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
     });
 
     // 加载禁用Mod文件卡片
     connect(ui->pushButton_trashMod, &QPushButton::clicked, this, [=](){
         ui->cardContainer->clearModCard();
         ui->cardContainer->appendModCard(GameManager::getInstance()->scanDirModInfo(GameManager::ModTrashDir));
-        ui->checkBox_isDisabled->setDisabled(true);
         ui->cardContainer->setDisabledVisiable(true);
     });
 

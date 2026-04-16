@@ -30,13 +30,14 @@ public:
     struct Task {
         int id;              // 任务标识
         int priority;        // 优先级(数值越大优先级越高)
+        bool isCover;        // 是否覆盖相同任务
         int retryCount;      // 重试次数
         bool forceReload;    // 是否强制重新加载（忽略缓存）
         QString imagePath;   // 图片路径
         QSize targetSize;    // 目标大小
         qint64 timestamp;    // 任务创建时间戳
 
-        Task() : priority(PriorityBackground), retryCount(0), timestamp(0){}
+        Task() : priority(PriorityBackground), isCover(false), retryCount(0), timestamp(0){}
         // 比较操作符，用于排序
         bool operator<(const Task& other) const {
             if (priority != other.priority) {
@@ -152,8 +153,6 @@ private:
     bool loadImageFromFile(const Task& task, QImage& outImage, QString& errorMsg);
     // 验证图片
     bool validateImage(const QImage& image) const;
-    // 优化图片大小
-    QImage optimizeImage(const QImage& image, const QSize& targetSize) const;
     // 更新任务状态
     void updateStats(bool success, qint64 loadTime, int imageSize);
     // 清除缓存

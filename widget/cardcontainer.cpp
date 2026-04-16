@@ -17,7 +17,6 @@ CardContainer::CardContainer(QWidget *parent)
     connect(m_imageLoader, &ImageLoader::imageLoaded, this, &CardContainer::onImageLoaded, Qt::QueuedConnection);
     connect(m_imageLoader, &ImageLoader::imageLoadFailed, this, &CardContainer::onImageFailed, Qt::QueuedConnection);
     m_imageLoader->start();
-
 }
 
 CardContainer::~CardContainer()
@@ -54,6 +53,17 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
 
         // 卡片销毁或者隐藏时触发布局更新
         connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
+
+        // 当模组卡片大小变化时提交图像加载任务
+        connect(modCard, &ModCard::imgResize, this, [=](){
+            ImageLoader::Task task;
+            task.isCover = true;
+            task.id = modCard->modInfo().id;
+            task.imagePath = QString("%1/%2/%3.jpg").arg( GameManager::getInstance()->gamePath(),
+                                                         modCard->modInfo().relative_path , modCard->modInfo().original_name);
+            task.targetSize = modCard->getImageSize();
+            m_imageLoader->addTask(task);
+        });
     }
     // 更新布局
     updateLayout();
@@ -276,16 +286,6 @@ void CardContainer::updateLayout()
         ModCard *modCard = it.value();
 
         if (!modCard->isVisibleTo(this)) continue;
-
-        if(!modCard->isLoadedImage()){
-            // 提交Mod卡片图片加载任务
-            ImageLoader::Task task;
-            task.id = modCard->modInfo().id;
-            task.imagePath = QString("%1/%2/%3.jpg").arg( GameManager::getInstance()->gamePath(),
-                                                         modCard->modInfo().relative_path , modCard->modInfo().original_name);
-            task.targetSize = modCard->getImageSize();
-            m_imageLoader->addTask(task);
-        }
 
         // 移动卡片到新位置
         modCard->move(x, y);

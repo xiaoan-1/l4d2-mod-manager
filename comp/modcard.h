@@ -82,6 +82,10 @@ signals:
 
     // 分类信号
     void classified(const QString &cat);
+
+    // 图片标齐全大小变化
+    void imgResize();
+
 private:
     Ui::ModCard *ui;
 

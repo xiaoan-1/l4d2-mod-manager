@@ -44,14 +44,12 @@ void ImageLoader::addTask(const Task &task)
     QMutexLocker locker(&m_mutex);
 
     // 检查是否已存在相同的任务
-    // for (int i = 0; i < m_pendingTasks.size(); ++i) {
-    //     if (m_pendingTasks[i].id == task.id) {
-    //         if (task.priority > m_pendingTasks[i].priority) {
-    //             m_pendingTasks[i] = task;
-    //         }
-    //         return;
-    //     }
-    // }
+    for (int i = 0; i < m_pendingTasks.size(); ++i) {
+        if (m_pendingTasks[i].id == task.id && task.isCover) {
+            m_pendingTasks.remove(i);
+            break;
+        }
+    }
 
     // 检查是否已在运行中
     // if (m_runningTasks.contains(task.id)) {
@@ -386,24 +384,21 @@ void ImageLoader::processTasks()
 
             if (!m_canceledTasks.contains(task.id)) {
                 if (success && validateImage(image)) {
-                    // 加载成功
-                    QImage optimized = optimizeImage(image, task.targetSize);
-
                     // 存入缓存
                     CachedImage cached;
-                    cached.image = optimized;
+                    cached.image = image;
                     cached.loadTime = loadTime;
                     cached.accessCount = 1;
                     cached.lastAccess = QDateTime::currentMSecsSinceEpoch();
 
-                    int imageSize = optimized.sizeInBytes();
+                    int imageSize = image.sizeInBytes();
                     m_currentCacheSize += imageSize;
                     m_imageCache.insert(task.id, cached);
 
                     // 如果超出限制清理缓存
                     cleanupCache();
 
-                    emit imageLoaded(task.id, optimized, false);
+                    emit imageLoaded(task.id, image, false);
                     // 更新统计
                     updateStats(true, loadTime, imageSize);
                 } else if (task.retryCount < m_maxRetryCount) {
@@ -503,33 +498,6 @@ bool ImageLoader::validateImage(const QImage &image) const
     if (image.format() == QImage::Format_Invalid) return false;
 
     return true;
-}
-
-/**
-* @author   XiaoAn
-* @brief    优化图片大小
-* @date     2026-02-28
-**/
-QImage ImageLoader::optimizeImage(const QImage &image, const QSize &targetSize) const
-{
-    if (image.isNull()) return image;
-
-    QImage result = image;
-
-    // 如果需要缩放
-    if (!targetSize.isEmpty() && targetSize.width() > 0) {
-        if (image.size() != targetSize) {
-            result = image.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        }
-    }
-
-    // 转换为标准格式（例如ARGB32），提高显示效率
-    if (result.format() != QImage::Format_ARGB32 &&
-        result.format() != QImage::Format_RGB32) {
-        result = result.convertToFormat(QImage::Format_ARGB32);
-    }
-
-    return result;
 }
 
 /**

@@ -43,6 +43,9 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
     // 给下拉框安装过滤器，忽略滚轮事件保证容器可以滚动
     ui->comboBox_categorys->installEventFilter(this);
 
+    // 给图片安装过滤，保证图片自适应大小
+    ui->label_img->installEventFilter(this);
+
     // 可选性
     m_checkBox = new QCheckBox(this);
     m_checkBox->move(0, 0);
@@ -86,8 +89,6 @@ ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
             }
         }
     });
-
-
 }
 
 /**
@@ -120,11 +121,9 @@ void ModCard::setCurrentCategory(const CategoryInfo &category)
 **/
 void ModCard::loadImage(const QImage &image)
 {
-    if (image.isNull() || !ui->label_img->pixmap().isNull()) return;
+    if (image.isNull()) return;
 
-    // 设置图片
     ui->label_img->setPixmap(QPixmap::fromImage(image));
-    ui->label_img->setAlignment(Qt::AlignCenter);
 }
 
 /**
@@ -170,14 +169,10 @@ void ModCard::updateModInfo()
         ui->label_size->setText("0kb");
     }
 
-
-
-
     // 获取所有分类列表
     m_categoryList = SqliteObj::getInstance()->getCategoryList();
     // 获取当前Mod的分类列表
     m_classifiedList = SqliteObj::getInstance()->getModCategorys(m_modInfo.id);
-
 
     // 添加该Mod未分类信息到下拉框中
     ui->comboBox_categorys->clear();
@@ -412,6 +407,11 @@ bool ModCard::eventFilter(QObject *obj, QEvent *event)
         event->ignore();
         return true;
     }
+
+    if (obj == ui->label_img && event->type() == QEvent::Resize) {
+        emit imgResize();
+    }
+
     return QWidget::eventFilter(obj, event);
 }
 
