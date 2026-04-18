@@ -14,10 +14,17 @@ class ModCard : public QWidget
 {
     Q_OBJECT
 public:
+    enum class SizeStyle{
+        Normal,
+        Small,
+        Large,
+        Conflict
+    };
+public:
     explicit ModCard(QWidget *parent = nullptr);
     ~ModCard();
 
-    ModCard(const ModInfo &modInfo, QWidget *parent = nullptr);
+    ModCard(const ModInfo &modInfo, QWidget *parent = nullptr, SizeStyle sizeStyle = SizeStyle::Normal);
 
 public:
     // 获取Mod信息
@@ -71,6 +78,10 @@ protected:
 
     void leaveEvent(QEvent *event) override;
 
+    void showEvent(QShowEvent *event) override;
+
+    void hideEvent(QHideEvent *event) override;
+
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 signals:
@@ -85,6 +96,12 @@ signals:
 
     // 图片标齐全大小变化
     void imgResize();
+
+    // 点击事件
+    void clicked();
+
+    // 启用与禁用
+    void toggleEnabled(bool enabled);
 
 private:
     Ui::ModCard *ui;

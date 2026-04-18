@@ -57,6 +57,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         comp/paramcheckwidget.h comp/paramcheckwidget.cpp comp/paramcheckwidget.ui
         widget/categorylistwidget.h widget/categorylistwidget.cpp widget/categorylistwidget.ui
         utils/vpkfileparser.h utils/vpkfileparser.cpp
+        widget/modconflictwidget.h widget/modconflictwidget.cpp widget/modconflictwidget.ui
 
 
 

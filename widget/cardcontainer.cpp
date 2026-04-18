@@ -4,24 +4,17 @@
 #include <QSettings>
 
 #include "gamemanager.h"
+#include "utils/imageloader.h"
 
 CardContainer::CardContainer(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::CardContainer)
 {
     ui->setupUi(this);
-
-    // 创建图片加载器
-    m_imageLoader = new ImageLoader();
-    // 连接信号
-    connect(m_imageLoader, &ImageLoader::imageLoaded, this, &CardContainer::onImageLoaded, Qt::QueuedConnection);
-    connect(m_imageLoader, &ImageLoader::imageLoadFailed, this, &CardContainer::onImageFailed, Qt::QueuedConnection);
-    m_imageLoader->start();
 }
 
 CardContainer::~CardContainer()
 {
-    m_imageLoader->stop();
     delete ui;
 }
 
@@ -47,23 +40,12 @@ void CardContainer::updateModCard()
 void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const CategoryInfo &category)
 {
     foreach (const ModInfo &modInfo, modInfoList) {
-        ModCard *modCard = new ModCard(modInfo, ui->centralwidget);
+        ModCard *modCard = new ModCard(modInfo, ui->centralwidget, m_sizeStyle);
         modCard->setCurrentCategory(category);
         m_modCardMap.insert(modInfo.id, modCard);
 
         // 卡片销毁或者隐藏时触发布局更新
         connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
-
-        // 当模组卡片大小变化时提交图像加载任务
-        connect(modCard, &ModCard::imgResize, this, [=](){
-            ImageLoader::Task task;
-            task.isCover = true;
-            task.id = modCard->modInfo().id;
-            task.imagePath = QString("%1/%2/%3.jpg").arg( GameManager::getInstance()->gamePath(),
-                                                         modCard->modInfo().relative_path , modCard->modInfo().original_name);
-            task.targetSize = modCard->getImageSize();
-            m_imageLoader->addTask(task);
-        });
     }
     // 更新布局
     updateLayout();
@@ -89,7 +71,7 @@ void CardContainer::removeModCard(const int &modId)
 **/
 void CardContainer::clearModCard()
 {
-    m_imageLoader->cancelAllTasks();
+    ImageLoader::getInstance()->cancelAllTasks();
 
     // 删除卡片
     for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
@@ -100,66 +82,12 @@ void CardContainer::clearModCard()
 
 /**
 * @author   XiaoAn
-* @brief    设置卡片大小
-* @date     2026-03-01
+* @brief    设置模组卡片的大小模式
+* @date     2026-04-18
 **/
-void CardContainer::setCardFixedSize(const QSize &size)
+void CardContainer::setCardSizeStyle(ModCard::SizeStyle sizeStyle)
 {
-    for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
-        it.value()->setFixedSize(size);
-    }
-
-    updateLayout();
-}
-
-/**
-* @author   XiaoAn
-* @brief    设置卡片间距
-* @date     2026-03-01
-**/
-void CardContainer::setSpacing(int horizontal, int vertical)
-{
-    if(horizontal >= 0) m_horizontalSpacing = horizontal;
-
-    if(vertical >= 0) m_verticalSpacing = vertical;
-    updateLayout();
-}
-
-/**
-* @author   XiaoAn
-* @brief    卡片水平间距
-* @date     2026-03-01
-**/
-void CardContainer::setHorizontalSpacing(int spacing)
-{
-    if(spacing >= 0) m_horizontalSpacing = spacing;
-    updateLayout();
-}
-
-/**
-* @author   XiaoAn
-* @brief    卡片垂直间距
-* @date     2026-03-01
-**/
-void CardContainer::setVerticalSpacing(int spacing)
-{
-    if(spacing >= 0) m_verticalSpacing = spacing;
-    updateLayout();
-}
-
-/**
-* @author   XiaoAn
-* @brief    设置外边距
-* @date     2026-03-01
-**/
-void CardContainer::setContentsMargins(int left, int top, int right, int bottom)
-{
-    if(left >= 0) m_leftMargin = left;
-    if(top >= 0) m_topMargin = top;
-    if(right >= 0) m_rightMargin = right;
-    if(bottom >= 0) m_bottomMargin = bottom;
-
-    updateLayout();
+    m_sizeStyle = sizeStyle;
 }
 
 /**
@@ -263,7 +191,7 @@ void CardContainer::filterCard()
 **/
 void CardContainer::updateLayout()
 {
-    if (m_modCardMap.isEmpty()) return;
+    // if (m_modCardMap.isEmpty()) return;
 
     // 应用过滤条件
     filterCard();
@@ -302,31 +230,9 @@ void CardContainer::updateLayout()
         }
     }
     setFixedHeight(maxY + m_bottomMargin);
-}
 
-/**
-* @author   XiaoAn
-* @brief    加载图片
-* @date     2026-02-28
-**/
-void CardContainer::onImageLoaded(int modId, const QImage &image, bool fromCache)
-{
-    if (!m_modCardMap.contains(modId)) return;
-    // 更新卡片图片
-    m_modCardMap.value(modId)->loadImage(image);
+    emit updatedLayout();
 }
-
-/**
-* @author   XiaoAn
-* @brief    图片加载失败
-* @date     2026-04-16
-**/
-void CardContainer::onImageFailed(int modId, const QString &errorStr)
-{
-    if (!m_modCardMap.contains(modId)) return;
-    m_modCardMap.value(modId)->setImageErrorText(errorStr);
-}
-
 
 /**
 * @author   XiaoAn

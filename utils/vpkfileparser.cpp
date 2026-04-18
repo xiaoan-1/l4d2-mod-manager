@@ -64,6 +64,42 @@ QList<QPair<int, int>> VpkFileParser::detectConflicts(const QList<VpkFileParser>
 
 /**
 * @author   XiaoAn
+* @brief    检测单个vpk和其他vpk的冲突
+* @date     2026-04-18
+**/
+QList<int> VpkFileParser::detectConflicts(const VpkFileParser &vpkFile, const QList<VpkFileParser> &vpkFileList)
+{
+    QHash<QString, QVector<QPair<int, quint32>>> pathToMods;
+
+    for (int i = 0; i < vpkFileList.size(); ++i) {
+        const auto& entries = vpkFileList[i].entries();
+        for (const auto& entry : entries) {
+            if(entry.path.isEmpty()) continue;
+            QString fullPath = QString("%1/%2.%3").arg(entry.path, entry.baseName, entry.extension);
+            pathToMods[fullPath].append(qMakePair(i, entry.crc32));
+        }
+    }
+
+    // 遍历 target 的条目，收集冲突的模组索引
+    QSet<int> conflictSet;
+    foreach (const auto& entry , vpkFile.entries()) {
+        QString fullPath = QString("%1/%2.%3").arg(entry.path, entry.baseName, entry.extension);
+        auto it = pathToMods.find(fullPath);
+        if (it != pathToMods.end()) {
+            // 该路径在 pathToMods 中存在，检查 CRC32 是否不同
+            foreach (const auto& pair , it.value()) {
+                if (pair.second != entry.crc32) {
+                    conflictSet.insert(pair.first);
+                }
+            }
+        }
+    }
+
+    return conflictSet.values();
+}
+
+/**
+* @author   XiaoAn
 * @brief    获取文件条目数据
 * @date     2026-04-14
 **/

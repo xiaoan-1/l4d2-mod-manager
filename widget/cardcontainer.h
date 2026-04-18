@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QResizeEvent>
 #include "comp/modcard.h"
-#include "utils/imageloader.h"
+
 
 namespace Ui {
 class CardContainer;
@@ -32,17 +32,13 @@ public:
 
 public:
     // 设置卡片大小
-    void setCardFixedSize(const QSize& size);
-    // 设置卡片之间的间距
-    void setSpacing(int horizontal, int vertical);
-    void setHorizontalSpacing(int spacing);
-    void setVerticalSpacing(int spacing);
-
-    // 设置边距
-    void setContentsMargins(int left, int top, int right, int bottom);
+    void setCardSizeStyle(ModCard::SizeStyle sizeStyle);
 
     // 是否显示禁用mod
     void setDisabledVisiable(bool visiable);
+
+public:
+    QList<ModCard*> modCardList() { return m_modCardMap.values(); };
 
 public slots:    
     void slot_searchCard(const QString &name);
@@ -56,13 +52,12 @@ private:
     // 刷新布局
     void updateLayout();
 
-private slots:
-    void onImageLoaded(int modId, const QImage& image, bool fromCache);
-
-    void onImageFailed(int modId, const QString& errorStr);
-
 protected:
     void resizeEvent(QResizeEvent *event) override;
+
+signals:
+    // 布局发生变化信号
+    void updatedLayout();
 
 private:
     Ui::CardContainer *ui;
@@ -79,9 +74,8 @@ private:
     // 分类筛选过滤
     QMap<QString, bool> m_categoryFilter;
 
-    // 图片加载器
-    ImageLoader* m_imageLoader;
-
+    // 大小
+    ModCard::SizeStyle m_sizeStyle = ModCard::SizeStyle::Normal;
     // 卡片固定大小
     QSize m_cardSize = {300, 300};
 

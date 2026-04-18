@@ -46,6 +46,7 @@ public:
 public:
     // 检测冲突
     static QList<QPair<int, int>> detectConflicts(const QList<VpkFileParser> &vpkFileList);
+    static QList<int> detectConflicts(const VpkFileParser &vpkFile, const QList<VpkFileParser> &vpkFileList);
 
     // 获取文件条目数据
     QByteArray getEntryFileData(const QString &filePath);

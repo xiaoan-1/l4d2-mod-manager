@@ -6,9 +6,11 @@
 #include <QImageReader>
 #include <QImageIOHandler>
 #include <QMessageBox>
+#include <QPixmapCache>
 #include <QLineEdit>
 
 #include "../gamemanager.h"
+#include "../utils/imageloader.h"
 #include "../utils/vpkfileparser.h"
 
 ModCard::ModCard(QWidget *parent)
@@ -16,8 +18,6 @@ ModCard::ModCard(QWidget *parent)
     , ui(new Ui::ModCard)
 {
     ui->setupUi(this);
-
-    setFixedSize(320, 300);
 }
 
 ModCard::~ModCard()
@@ -25,10 +25,22 @@ ModCard::~ModCard()
     delete ui;
 }
 
-ModCard::ModCard(const ModInfo &modInfo, QWidget *parent)
+ModCard::ModCard(const ModInfo &modInfo, QWidget *parent, SizeStyle sizeStyle)
     : ModCard(parent)
 {
     m_modInfo = modInfo;
+
+    if(sizeStyle == SizeStyle::Normal){
+        setFixedSize(320, 300);
+    }else if(sizeStyle == SizeStyle::Conflict){
+        setFixedSize(220, 200);
+        ui->label_s->hide();
+        ui->label_size->hide();
+        ui->pushButton_remark->hide();
+        ui->pushButton_affirm->hide();
+        ui->comboBox_categorys->hide();
+    }
+
     updateModInfo();
 
     // 备注
@@ -311,13 +323,17 @@ void ModCard::transfer()
 
     QString destRelativePath, btnText;
     if(m_modInfo.relative_path == GameManager::ModTrashDir){
+        // 启用模组
         btnText = "禁用";
         destRelativePath = GameManager::ModLocalDir;
         ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#465975;}");
+        emit toggleEnabled(true);
     }else{
+        // 禁用模组
         btnText = "启用";
         destRelativePath = GameManager::ModTrashDir;
         ui->centralwidget->setStyleSheet("#centralwidget{border: 0px;border-radius: 12px;background-color:#1c2027;}");
+        emit toggleEnabled(false);
     }
 
     QString sourFilePath = QString("%1/%2/%3").arg(gamePath, m_modInfo.relative_path, m_modInfo.original_name);
@@ -397,6 +413,34 @@ void ModCard::leaveEvent(QEvent *event)
 
 /**
 * @author   XiaoAn
+* @brief    显示
+* @date     2026-04-18
+**/
+void ModCard::showEvent(QShowEvent *event)
+{
+    ImageLoader::Task task;
+    task.isCover = true;
+    task.id = m_modInfo.id;
+    task.imagePath = QString("%1/%2/%3.jpg").arg(
+        GameManager::getInstance()->gamePath(), m_modInfo.relative_path , m_modInfo.original_name);
+    task.targetSize = getImageSize();
+    task.taskTargetPtr = this;
+    ImageLoader::getInstance()->addTask(task);
+}
+
+/**
+* @author   XiaoAn
+* @brief    隐藏
+* @date     2026-04-18
+**/
+void ModCard::hideEvent(QHideEvent *event)
+{
+    ui->label_img->clear();
+    QPixmapCache::clear();
+}
+
+/**
+* @author   XiaoAn
 * @brief    事件过滤
 * @date     2026-03-14
 **/
@@ -408,8 +452,12 @@ bool ModCard::eventFilter(QObject *obj, QEvent *event)
         return true;
     }
 
-    if (obj == ui->label_img && event->type() == QEvent::Resize) {
-        emit imgResize();
+    if (obj == ui->label_img) {
+        if(event->type() == QEvent::Resize){
+            emit imgResize();
+        }else if(event->type() == QEvent::MouseButtonPress){
+            emit clicked();
+        }
     }
 
     return QWidget::eventFilter(obj, event);

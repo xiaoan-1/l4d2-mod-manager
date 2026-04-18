@@ -11,7 +11,7 @@
 
 ImageLoader::ImageLoader(QObject *parent)
     : QObject{parent}
-    , m_maxCacheSize(50 * 1024 * 1024)  // 默认50MB缓存
+    , m_maxCacheSize(10 * 1024 * 1024)  // 默认50MB缓存
     , m_currentCacheSize(0)
     , m_maxConcurrentTasks(DEFAULT_CONCURRENT)
     , m_loadTimeoutMs(DEFAULT_TIMEOUT)
@@ -32,6 +32,21 @@ ImageLoader::ImageLoader(QObject *parent)
 ImageLoader::~ImageLoader()
 {
     stop();
+}
+
+
+ImageLoader *ImageLoader::getInstance(QObject *parent)
+{
+    static ImageLoader* instance = nullptr;
+    static QMutex mutex;
+    if (!instance) {
+        QMutexLocker locker(&mutex);
+        if (!instance) {
+            instance = new ImageLoader(parent);
+            instance->start();
+        }
+    }
+    return instance;
 }
 
 /**
@@ -309,7 +324,12 @@ void ImageLoader::processTasks()
             // 检查运行中的任务是否超时,移除超时任务
             for (auto it = m_runningTasks.begin(); it != m_runningTasks.end(); ) {
                 if (it.value().timer.elapsed() > m_loadTimeoutMs) {
-                    emit imageLoadFailed(it.key(), "加载超时");
+                    Task task = it.value().task;
+                    if(task.taskTargetPtr){
+                        emit imageLoadFailedByPtr(task.taskTargetPtr, "加载超时");
+                    }else{
+                        emit imageLoadFailedById(task.id, "加载超时");
+                    }
                     it = m_runningTasks.erase(it);
                 } else {
                     ++it;
@@ -351,7 +371,11 @@ void ImageLoader::processTasks()
                 cached.accessCount++;
                 cached.lastAccess = QDateTime::currentMSecsSinceEpoch();
                 // 缓存命中，任务完成
-                emit imageLoaded(task.id, cached.image, true);
+                if(task.taskTargetPtr){
+                    emit imageLoadedByPtr(task.taskTargetPtr, cached.image, true);
+                }else{
+                    emit imageLoadedById(task.id, cached.image, true);
+                }
                 m_stats.completedTasks++;
 
                 emit taskCountChanged(m_pendingTasks.size(), m_runningTasks.size());
@@ -397,8 +421,12 @@ void ImageLoader::processTasks()
 
                     // 如果超出限制清理缓存
                     cleanupCache();
+                    if(task.taskTargetPtr){
+                        emit imageLoadedByPtr(task.taskTargetPtr, cached.image, false);
+                    }else{
+                        emit imageLoadedById(task.id, image, false);
+                    }
 
-                    emit imageLoaded(task.id, image, false);
                     // 更新统计
                     updateStats(true, loadTime, imageSize);
                 } else if (task.retryCount < m_maxRetryCount) {
@@ -408,7 +436,11 @@ void ImageLoader::processTasks()
                     m_pendingTasks.prepend(task);
                 } else {
                     // 最终失败
-                    emit imageLoadFailed(task.id, errorMsg);
+                    if(task.taskTargetPtr){
+                        emit imageLoadFailedByPtr(task.taskTargetPtr, errorMsg);
+                    }else{
+                        emit imageLoadFailedById(task.id, errorMsg);
+                    }
                     updateStats(false, loadTime, 0);
                 }
             } else {

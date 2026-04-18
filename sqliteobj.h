@@ -54,7 +54,7 @@ public:
     ModInfo getModInfoByHash(const QString &hash);
 
     // 添加Mod信息项
-    bool appendModInfo(const ModInfo &modInfo);
+    int appendModInfo(const ModInfo &modInfo);
 
     // 移除Mod信息项
     bool removeModInfo(const int &modId);

@@ -11,6 +11,8 @@
 #include "comp/checkboxlistwidget.h"
 #include "comp/paramcheckwidget.h"
 #include "widget/cardcontainer.h"
+#include "widget/modconflictwidget.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -70,5 +72,8 @@ private:
 
     // 是否显示禁用Mod
     bool m_disableModVisiable = true;
+
+    // 冲突模组面板
+    ModConflictWidget *m_modConflictWidget;
 };
 #endif // MAINWINDOW_H

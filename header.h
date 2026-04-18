@@ -35,6 +35,10 @@ struct ModInfo {
     bool operator==(const ModInfo& other) const {
         return this->id == other.id;
     }
+
+    bool operator<(const ModInfo& other) const {
+        return this->id < other.id;
+    }
 };
 
 

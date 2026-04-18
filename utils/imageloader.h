@@ -17,6 +17,13 @@
 class ImageLoader : public QObject
 {
     Q_OBJECT
+private:
+    explicit ImageLoader(QObject *parent = nullptr);
+    ~ImageLoader();
+    // 禁止拷贝
+    ImageLoader(const ImageLoader&) = delete;
+    ImageLoader& operator=(const ImageLoader&) = delete;
+
 public:
     // 图片加载优先级
     enum LoadPriority {
@@ -36,6 +43,7 @@ public:
         QString imagePath;   // 图片路径
         QSize targetSize;    // 目标大小
         qint64 timestamp;    // 任务创建时间戳
+        void *taskTargetPtr; // 任务目标对象指针
 
         Task() : priority(PriorityBackground), isCover(false), retryCount(0), timestamp(0){}
         // 比较操作符，用于排序
@@ -72,8 +80,7 @@ public:
     };
 
 public:
-    explicit ImageLoader(QObject *parent = nullptr);
-    ~ImageLoader();
+    static ImageLoader* getInstance(QObject *parent = nullptr);
 
 public:
     // 添加任务
@@ -112,9 +119,11 @@ public:
 
 signals:
     // 图片加载完毕
-    void imageLoaded(int taskId, const QImage& image, bool fromCache);
+    void imageLoadedById(int taskId, const QImage& image, bool fromCache);
+    void imageLoadedByPtr(void *taskTargetPtr, const QImage& image, bool fromCache);
     // 图片加载失败
-    void imageLoadFailed(int taskId, const QString& error);
+    void imageLoadFailedById(int taskId, const QString& error);
+    void imageLoadFailedByPtr(void *taskTargetPtr, const QString& error);
     // 任务进度
     void taskProgress(int pending, int active, int completed);
     // 任务数量变化

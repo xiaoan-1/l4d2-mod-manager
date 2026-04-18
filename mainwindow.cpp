@@ -15,6 +15,7 @@
 #include <tlhelp32.h>
 #include "comp/categorydialog.h"
 #include "comp/categorybutton.h"
+#include "utils/imageloader.h"
 #include "utils/vpkfileparser.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -35,14 +36,26 @@ MainWindow::MainWindow(QWidget *parent)
     QSettings settings(QCoreApplication::applicationDirPath() + "/config.ini");
     m_disableModVisiable = settings.value("DisabledModVisiable").toBool();
 
-
     initWidget();
+
+    // 连接图片加载信号（单例模式，连接一次即可）
+    connect(ImageLoader::getInstance(), &ImageLoader::imageLoadedByPtr, this, [=](void *ptr, const QImage &image, bool fromCache){
+        ModCard *modCard = reinterpret_cast<ModCard*>(ptr);
+        if (!modCard) return;
+        // 更新卡片图片
+        modCard->loadImage(image);
+    }, Qt::QueuedConnection);
+
+    connect(ImageLoader::getInstance(), &ImageLoader::imageLoadFailedByPtr, this, [=](void *ptr, const QString &errorStr){
+        ModCard *modCard = reinterpret_cast<ModCard*>(ptr);
+        if (!modCard) return;
+        modCard->setImageErrorText(errorStr);
+    }, Qt::QueuedConnection);
 
     // 全局互斥选中按钮
     m_buttonGroup.addButton(ui->pushButton_workshop);
     m_buttonGroup.addButton(ui->pushButton_localMod);
     m_buttonGroup.addButton(ui->pushButton_trashMod);
-    m_buttonGroup.addButton(ui->pushButton_conflict);
     m_buttonGroup.setExclusive(true);
 
     // 共同行为
@@ -213,6 +226,8 @@ void MainWindow::initWidget()
         m_ckListWidget->show();
     });
 
+    // 模组冲突面板
+    m_modConflictWidget = new ModConflictWidget(this);
 }
 
 /**
@@ -397,10 +412,49 @@ void MainWindow::importMod()
     QStringList filePathList = QFileDialog::getOpenFileNames(this, "选择vpk文件", QDir::homePath(), "(*.vpk)");
     if(filePathList.isEmpty()) return;
 
+    QStringList failedFileList;
+
+    QList<ModInfo> modInfoList;
     foreach (const auto &filePath, filePathList) {
         QFileInfo fileInfo(filePath);
-        QString gamePath = GameManager::getInstance()->gamePath();
-        QFile(filePath).copy(QString("%1/%2/%3").arg(gamePath, GameManager::ModLocalDir, fileInfo.fileName()));
+        QString vpkTarget = QString("%1/%2/%3.vpk").arg(
+            GameManager::getInstance()->gamePath(), GameManager::ModLocalDir, fileInfo.baseName());
+        ModInfo modInfo;
+        modInfo.file_hash = GameManager::calculateFileHash(fileInfo.absoluteFilePath());
+        modInfo.relative_path = GameManager::ModLocalDir;
+        modInfo.original_name = fileInfo.baseName();
+        modInfo.custom_name = "";
+        if(!QFile(filePath).copy(vpkTarget)){
+            failedFileList << fileInfo.fileName();
+            continue;
+        }
+
+        // 如果存在图片则一并移动
+        QString imagePath = QString("%1/%2.jpg").arg(fileInfo.absolutePath(), fileInfo.baseName());
+        QString imageTarget = QString("%1/%2/%3.jpg").arg(
+            GameManager::getInstance()->gamePath(), GameManager::ModLocalDir, fileInfo.baseName());
+        QFile(imagePath).copy(imageTarget);
+
+        // 添加到数据库
+        int modId = SqliteObj::getInstance()->appendModInfo(modInfo);
+        modInfo.id = modId;
+        if(modId != -1){
+            modInfoList.append(modInfo);
+        }
+    }
+
+    if(!failedFileList.isEmpty()){
+        QMessageBox::warning(this, "导入失败", failedFileList.join("/n"), QMessageBox::Ok);
+    }
+
+    if(modInfoList.isEmpty()) return;
+
+    m_modConflictWidget->clearConflictMod();
+    m_modConflictWidget->detectConflictMod(modInfoList);
+    if(!m_modConflictWidget->conflictModList().isEmpty()){
+        QSize size = m_modConflictWidget->size();
+        m_modConflictWidget->move((width() - size.width()) / 2, (height() - size.height()) / 2);
+        m_modConflictWidget->show();
     }
 }
 
@@ -440,31 +494,9 @@ void MainWindow::moveToLocal()
 **/
 void MainWindow::checkConflictMod()
 {
-    ui->checkBox_isDisabled->setDisabled(true);
-    QList<ModInfo> modInfoList = GameManager::getInstance()->scanDirModInfo(GameManager::ModLocalDir);
-
-    QString gamePath = GameManager::getInstance()->gamePath();
-
-    // 解析所有vpk文件
-    QList<VpkFileParser> vpkFileList;
-    foreach (const ModInfo &modInfo, modInfoList) {
-        QString filePath = QString("%1/%2/%3.vpk").arg(gamePath, modInfo.relative_path, modInfo.original_name);
-        vpkFileList.append(VpkFileParser(filePath));
-    }
-
-    QList<QPair<int, int>> conflictPairs = VpkFileParser::detectConflicts(vpkFileList);
-
-    QSet<int> conflicts;
-    foreach (const auto &pair, conflictPairs) {
-        conflicts.insert(pair.first);
-        conflicts.insert(pair.second);
-    }
-
-    QList<ModInfo> conflictModList;
-    foreach (const auto &conflict, conflicts) {
-        conflictModList.append(modInfoList[conflict]);
-    }
-
-    ui->cardContainer->clearModCard();
-    ui->cardContainer->appendModCard(conflictModList);
+    m_modConflictWidget->clearConflictMod();
+    m_modConflictWidget->detectConflictMod();
+    QSize size = m_modConflictWidget->size();
+    m_modConflictWidget->move((width() - size.width()) / 2, (height() - size.height()) / 2);
+    m_modConflictWidget->show();
 }

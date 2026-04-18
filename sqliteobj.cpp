@@ -322,7 +322,7 @@ ModInfo SqliteObj::getModInfoByHash(const QString &hash)
 * @brief    添加Mod信息
 * @date     2026-02-25
 **/
-bool SqliteObj::appendModInfo(const ModInfo &modInfo)
+int SqliteObj::appendModInfo(const ModInfo &modInfo)
 {
     if (modInfo.relative_path.isEmpty() || modInfo.original_name.isEmpty()) return false;
 
@@ -337,9 +337,10 @@ bool SqliteObj::appendModInfo(const ModInfo &modInfo)
 
     if (!query.exec()) {
         qWarning() << "添加Mod信息失败：" << modInfo.original_name << query.lastError().text();
-        return false;
+        return -1;
+    }else{
+        return query.lastInsertId().toInt();
     }
-    return true;
 }
 
 /**

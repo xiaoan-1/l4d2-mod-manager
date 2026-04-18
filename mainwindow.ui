@@ -57,9 +57,6 @@ QScrollArea{border: 0px; background-color: transparent;}
 	background-color: rgb(51, 65, 85);
 }
 
-#modCardList {background-color: transparent;}
-#categoryList {background-color: transparent;}
-
 #pushButton_setting{
 	padding: 8 4 8 4;
 	background-color: transparent;
@@ -260,7 +257,7 @@ font-weight: bold;</string>
           <string>冲突模组检测</string>
          </property>
          <property name="checkable">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="autoExclusive">
           <bool>false</bool>
@@ -372,7 +369,7 @@ font-weight: bold;</string>
         </rect>
        </property>
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
