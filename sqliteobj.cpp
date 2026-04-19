@@ -408,8 +408,6 @@ bool SqliteObj::updateModInfo(const ModInfo &modInfo)
 **/
 bool SqliteObj::updateModCustomName(const int &modId, const QString &name)
 {
-    if(name.isEmpty()) return false;
-
     QSqlQuery query(m_db);
     query.prepare("UPDATE mod_mappings set custom_name = :name WHERE id = :mod_id");
     query.bindValue(":mod_id", modId);

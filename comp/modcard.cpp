@@ -280,35 +280,27 @@ void ModCard::setImageErrorText(const QString &errorStr)
 **/
 void ModCard::remark()
 {
-    QWidget *w = ui->gridLayout->itemAtPosition(0, 0)->widget();
-
-    if(QLabel *label = qobject_cast<QLabel*>(w)){
-        QLineEdit *lineEdit = new QLineEdit(this);
-        ui->gridLayout->removeWidget(w);
-        w->deleteLater();
-        ui->gridLayout->addWidget(lineEdit, 0, 0, 1, 2);
-        ui->pushButton_remark->setText("确认");
-    }else if(QLineEdit *lineEdit = qobject_cast<QLineEdit*>(w)){
-        QLabel *label = new QLabel(this);
-        label->setStyleSheet("color: rgb(0, 170, 255);font-size: 20px;font-weight: bold;");
-        if(!lineEdit->text().isEmpty()){
-            label->setText(lineEdit->text());
-            // 修改数据库Mod自定义名称
-            bool ret = SqliteObj::getInstance()->updateModCustomName(m_modInfo.id, lineEdit->text());
-            if(ret){
-                m_modInfo.custom_name = lineEdit->text();
-            }
-        }else if(m_modInfo.custom_name.isEmpty()){
-            label->setText(m_modInfo.original_name);
+    if(m_remarkEdit){
+        QString newName = m_remarkEdit->text();
+        // 修改数据库Mod自定义名称
+        bool ret = SqliteObj::getInstance()->updateModCustomName(m_modInfo.id, newName);
+        if(ret){
+            m_modInfo.custom_name = newName;
         }else{
-            label->setText(m_modInfo.custom_name);
+            QMessageBox::warning(this, "错误", "备注失败！！", QMessageBox::Ok);
         }
-        ui->gridLayout->removeWidget(w);
-        w->deleteLater();
-        ui->gridLayout->addWidget(label, 0, 0, 1, 2);
+        updateModInfo();
+        m_remarkEdit->deleteLater();
+        m_remarkEdit = nullptr;
         ui->pushButton_remark->setText("备注");
+    }else{
+        m_remarkEdit = new QLineEdit(this);
+        m_remarkEdit->setGeometry(ui->label_name->geometry());
+        m_remarkEdit->setText(ui->label_name->text());
+        m_remarkEdit->show();
+        m_remarkEdit->raise();
+        ui->pushButton_remark->setText("确认");
     }
-
 }
 
 /**

@@ -35,7 +35,7 @@
       <string notr="true">#centralwidget{
 	border: 0px;
 	border-radius: 8px;
-	background: rgb(172, 139, 105);
+	background: rgb(25, 136, 60);
 }
 #centralwidget&gt;QPushButton{
 	border: 0px;

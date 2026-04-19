@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QCheckBox>
 #include <QPushButton>
+#include <QLineEdit>
 
 #include "../header.h"
 
@@ -107,6 +108,9 @@ private:
 
     // 移除/删除按钮
     QPushButton *m_button = nullptr;
+
+    // 备注编辑框
+    QLineEdit *m_remarkEdit = nullptr;
 
     // Mod文件信息
     ModInfo m_modInfo;
