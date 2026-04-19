@@ -72,8 +72,5 @@ private:
 
     // 是否显示禁用Mod
     bool m_disableModVisiable = true;
-
-    // 冲突模组面板
-    ModConflictWidget *m_modConflictWidget;
 };
 #endif // MAINWINDOW_H

@@ -6,7 +6,6 @@
 #include <QImageReader>
 #include <QImageIOHandler>
 #include <QMessageBox>
-#include <QPixmapCache>
 #include <QLineEdit>
 
 #include "../gamemanager.h"
@@ -409,34 +408,6 @@ void ModCard::leaveEvent(QEvent *event)
 {
     m_button->hide();
     QWidget::leaveEvent(event);
-}
-
-/**
-* @author   XiaoAn
-* @brief    显示
-* @date     2026-04-18
-**/
-void ModCard::showEvent(QShowEvent *event)
-{
-    ImageLoader::Task task;
-    task.isCover = true;
-    task.id = m_modInfo.id;
-    task.imagePath = QString("%1/%2/%3.jpg").arg(
-        GameManager::getInstance()->gamePath(), m_modInfo.relative_path , m_modInfo.original_name);
-    task.targetSize = getImageSize();
-    task.taskTargetPtr = this;
-    ImageLoader::getInstance()->addTask(task);
-}
-
-/**
-* @author   XiaoAn
-* @brief    隐藏
-* @date     2026-04-18
-**/
-void ModCard::hideEvent(QHideEvent *event)
-{
-    ui->label_img->clear();
-    QPixmapCache::clear();
 }
 
 /**

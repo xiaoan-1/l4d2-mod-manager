@@ -13,6 +13,9 @@
 #include <QThread>
 #include <QCache>
 #include <QMetaType>
+#include <QPointer>
+
+#include "../comp/modcard.h"
 
 class ImageLoader : public QObject
 {
@@ -43,7 +46,7 @@ public:
         QString imagePath;   // 图片路径
         QSize targetSize;    // 目标大小
         qint64 timestamp;    // 任务创建时间戳
-        void *taskTargetPtr; // 任务目标对象指针
+        QPointer<ModCard> modCardPtr;   // 加载图像的目标控件指针
 
         Task() : priority(PriorityBackground), isCover(false), retryCount(0), timestamp(0){}
         // 比较操作符，用于排序
@@ -113,17 +116,17 @@ public slots:
 public:
     // 线程管理
     void start();           // 启动
+    void stop();            // 停止
     void pause();           // 暂停处理
     void resume();          // 恢复处理
-    void stop();            // 停止（退出线程时调用）
 
 signals:
     // 图片加载完毕
     void imageLoadedById(int taskId, const QImage& image, bool fromCache);
-    void imageLoadedByPtr(void *taskTargetPtr, const QImage& image, bool fromCache);
+    void imageLoadedByPtr(QPointer<ModCard> modCardPtr, const QImage& image, bool fromCache);
     // 图片加载失败
     void imageLoadFailedById(int taskId, const QString& error);
-    void imageLoadFailedByPtr(void *taskTargetPtr, const QString& error);
+    void imageLoadFailedByPtr(QPointer<ModCard> modCardPtr, const QString& error);
     // 任务进度
     void taskProgress(int pending, int active, int completed);
     // 任务数量变化

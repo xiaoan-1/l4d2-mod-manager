@@ -55,12 +55,20 @@ private:
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
+    void showEvent(QShowEvent *event) override;
+
+    void hideEvent(QHideEvent *event) override;
+
 signals:
     // 布局发生变化信号
     void updatedLayout();
 
 private:
     Ui::CardContainer *ui;
+
+    // 模组分类及其列表
+    CategoryInfo m_category;
+    QList<ModInfo> m_modInfoList;
 
     // Mod卡片控件
     QMap<int, ModCard*> m_modCardMap;

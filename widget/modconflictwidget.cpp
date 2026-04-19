@@ -14,7 +14,7 @@ ModConflictWidget::ModConflictWidget(QWidget *parent)
 
     m_layout = qobject_cast<QVBoxLayout*>(ui->scrollWidget_left->layout());
 
-    connect(ui->pushButton_close, &QPushButton::clicked, this, &ModConflictWidget::close);
+    connect(ui->pushButton_close, &QPushButton::clicked, this, &ModConflictWidget::deleteLater);
 
     ui->widget_container->setCardSizeStyle(ModCard::SizeStyle::Conflict);
 
@@ -170,6 +170,18 @@ void ModConflictWidget::appendModCard(const ModInfo &modInfo)
         if(modCard == m_currentCard && !m_cardList.isEmpty()){
             emit m_cardList.first()->clicked();
         }
+    });
+
+    // 当模组卡片大小变化时提交图像加载任务
+    connect(modCard, &ModCard::imgResize, this, [=](){
+        ImageLoader::Task task;
+        task.isCover = true;
+        task.id = modInfo.id;
+        task.imagePath = QString("%1/%2/%3.jpg").arg(
+            GameManager::getInstance()->gamePath(), modInfo.relative_path , modInfo.original_name);
+        task.targetSize = modCard->getImageSize();
+        task.modCardPtr = modCard;
+        ImageLoader::getInstance()->addTask(task);
     });
 }
 

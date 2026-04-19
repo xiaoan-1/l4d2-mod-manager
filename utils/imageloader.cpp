@@ -17,16 +17,9 @@ ImageLoader::ImageLoader(QObject *parent)
     , m_loadTimeoutMs(DEFAULT_TIMEOUT)
     , m_maxRetryCount(DEFAULT_RETRY)
     , m_paused(false)
-    , m_running(true)
+    , m_running(false)
 {
-    // 最大线程数
-    for (int i = 0; i < m_maxConcurrentTasks; ++i) {
-        QThread* thread = new QThread(this);
-        connect(thread, &QThread::started, thread, [this, thread]() {
-            processTasks();
-        }, Qt::DirectConnection);
-        m_workers.append(thread);
-    }
+
 }
 
 ImageLoader::~ImageLoader()
@@ -65,7 +58,6 @@ void ImageLoader::addTask(const Task &task)
             break;
         }
     }
-
     // 检查是否已在运行中
     // if (m_runningTasks.contains(task.id)) {
     //     RunningTask& rt = m_runningTasks[task.id];
@@ -170,8 +162,8 @@ void ImageLoader::cancelAllTasks()
     m_stats.cancelledTasks += m_pendingTasks.size();
     m_pendingTasks.clear();
 
-    foreach (const int& taskId, m_runningTasks.keys()) {
-        m_canceledTasks.insert(taskId);
+    for (auto it = m_runningTasks.begin(); it != m_runningTasks.end(); ++it) {
+        m_canceledTasks.insert(it.key());
     }
 
     emit taskCountChanged(m_pendingTasks.size(), m_runningTasks.size());
@@ -262,11 +254,40 @@ void ImageLoader::setRetryCount(int count)
 **/
 void ImageLoader::start()
 {
-    foreach (const auto &thread, m_workers) {
+    QMutexLocker locker(&m_mutex);
+    if (m_running) return;
+    m_running = true;
+    for (int i = 0; i < m_maxConcurrentTasks; ++i) {
+        QThread *thread = new QThread;
+        connect(thread, &QThread::started, thread, [this, thread]() {
+            processTasks();
+        }, Qt::DirectConnection);
+        m_workers.append(thread);
         thread->start();
     }
 }
 
+/**
+* @author   XiaoAn
+* @brief    停止线程
+* @date     2026-02-28
+**/
+void ImageLoader::stop()
+{
+    m_running = false;
+    m_pendingTasks.clear();
+    m_condition.wakeAll();
+    foreach (QThread* thread , m_workers) {
+        thread->quit();
+        thread->wait(500);
+        thread->deleteLater();
+    }
+    m_workers.clear();
+    // 清理资源
+    m_runningTasks.clear();
+    m_canceledTasks.clear();
+    m_imageCache.clear();
+}
 
 /**
 * @author   XiaoAn
@@ -277,6 +298,9 @@ void ImageLoader::pause()
 {
     QMutexLocker locker(&m_mutex);
     m_paused = true;
+    // 清空缓存
+    m_currentCacheSize = 0;
+    m_imageCache.clear();
 }
 
 /**
@@ -288,18 +312,6 @@ void ImageLoader::resume()
 {
     QMutexLocker locker(&m_mutex);
     m_paused = false;
-    m_condition.wakeAll();
-}
-
-/**
-* @author   XiaoAn
-* @brief    停止线程
-* @date     2026-02-28
-**/
-void ImageLoader::stop()
-{
-    QMutexLocker locker(&m_mutex);
-    m_running = false;
     m_condition.wakeAll();
 }
 
@@ -325,8 +337,8 @@ void ImageLoader::processTasks()
             for (auto it = m_runningTasks.begin(); it != m_runningTasks.end(); ) {
                 if (it.value().timer.elapsed() > m_loadTimeoutMs) {
                     Task task = it.value().task;
-                    if(task.taskTargetPtr){
-                        emit imageLoadFailedByPtr(task.taskTargetPtr, "加载超时");
+                    if(!task.modCardPtr.isNull()){
+                        emit imageLoadFailedByPtr(task.modCardPtr, "加载超时");
                     }else{
                         emit imageLoadFailedById(task.id, "加载超时");
                     }
@@ -337,7 +349,7 @@ void ImageLoader::processTasks()
             }
         }
 
-        // 从等待队列中取出任务到运行中任务列表
+        // 2. 从等待队列中取出任务到运行中任务列表
         Task task;
         {
             QMutexLocker locker(&m_mutex);
@@ -350,7 +362,7 @@ void ImageLoader::processTasks()
 
             // 没有任务时等待
             if (m_pendingTasks.isEmpty()) {
-                m_condition.wait(&m_mutex, 5000);
+                m_condition.wait(&m_mutex, 1000);
                 continue;
             }
 
@@ -371,8 +383,8 @@ void ImageLoader::processTasks()
                 cached.accessCount++;
                 cached.lastAccess = QDateTime::currentMSecsSinceEpoch();
                 // 缓存命中，任务完成
-                if(task.taskTargetPtr){
-                    emit imageLoadedByPtr(task.taskTargetPtr, cached.image, true);
+                if(!task.modCardPtr.isNull()){
+                    emit imageLoadedByPtr(task.modCardPtr, cached.image, true);
                 }else{
                     emit imageLoadedById(task.id, cached.image, true);
                 }
@@ -390,12 +402,12 @@ void ImageLoader::processTasks()
             m_runningTasks[task.id] = rt;
         }
 
-        // 加载图片
+        // 3. 加载图片
         QImage image;
         QString errorMsg;
         bool success = loadImageFromFile(task, image, errorMsg);
 
-        // 处理运行中任务
+        // 4. 处理运行中任务
         {
             QMutexLocker locker(&m_mutex);
             if (!m_runningTasks.contains(task.id)) {
@@ -421,8 +433,8 @@ void ImageLoader::processTasks()
 
                     // 如果超出限制清理缓存
                     cleanupCache();
-                    if(task.taskTargetPtr){
-                        emit imageLoadedByPtr(task.taskTargetPtr, cached.image, false);
+                    if(!task.modCardPtr.isNull()){
+                        emit imageLoadedByPtr(task.modCardPtr, cached.image, false);
                     }else{
                         emit imageLoadedById(task.id, image, false);
                     }
@@ -436,8 +448,8 @@ void ImageLoader::processTasks()
                     m_pendingTasks.prepend(task);
                 } else {
                     // 最终失败
-                    if(task.taskTargetPtr){
-                        emit imageLoadFailedByPtr(task.taskTargetPtr, errorMsg);
+                    if(!task.modCardPtr.isNull()){
+                        emit imageLoadFailedByPtr(task.modCardPtr, errorMsg);
                     }else{
                         emit imageLoadFailedById(task.id, errorMsg);
                     }
@@ -451,6 +463,7 @@ void ImageLoader::processTasks()
             emit taskCountChanged(m_pendingTasks.size(), m_runningTasks.size());
             emit memoryUsageChanged(m_currentCacheSize, m_maxCacheSize);
         }
+
         // 避免CPU占用过高
         QThread::msleep(10);
     }

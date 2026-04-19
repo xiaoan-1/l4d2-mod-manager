@@ -2,6 +2,8 @@
 #include "ui_cardcontainer.h"
 
 #include <QSettings>
+#include <QPixmapCache>
+#include <windows.h>
 
 #include "gamemanager.h"
 #include "utils/imageloader.h"
@@ -39,6 +41,8 @@ void CardContainer::updateModCard()
 **/
 void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const CategoryInfo &category)
 {
+    m_category = category;
+    m_modInfoList = modInfoList;
     foreach (const ModInfo &modInfo, modInfoList) {
         ModCard *modCard = new ModCard(modInfo, ui->centralwidget, m_sizeStyle);
         modCard->setCurrentCategory(category);
@@ -46,9 +50,22 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
 
         // 卡片销毁或者隐藏时触发布局更新
         connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
+
+        // 当模组卡片大小变化时提交图像加载任务
+        connect(modCard, &ModCard::imgResize, this, [=](){
+            ImageLoader::Task task;
+            task.isCover = false;
+            task.id = modInfo.id;
+            task.imagePath = QString("%1/%2/%3.jpg").arg(
+                GameManager::getInstance()->gamePath(), modInfo.relative_path , modInfo.original_name);
+            task.targetSize = modCard->getImageSize();
+            task.modCardPtr = modCard;
+            ImageLoader::getInstance()->addTask(task);
+        });
     }
     // 更新布局
     updateLayout();
+
 }
 
 /**
@@ -71,8 +88,6 @@ void CardContainer::removeModCard(const int &modId)
 **/
 void CardContainer::clearModCard()
 {
-    ImageLoader::getInstance()->cancelAllTasks();
-
     // 删除卡片
     for (auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it) {
         it.value()->deleteLater();
@@ -191,8 +206,6 @@ void CardContainer::filterCard()
 **/
 void CardContainer::updateLayout()
 {
-    // if (m_modCardMap.isEmpty()) return;
-
     // 应用过滤条件
     filterCard();
 
@@ -246,4 +259,39 @@ void CardContainer::resizeEvent(QResizeEvent *event)
     if (event->size() != event->oldSize()) {
         updateLayout();
     }
+}
+
+/**
+* @author   XiaoAn
+* @brief    显示
+* @date     2026-04-18
+**/
+void CardContainer::showEvent(QShowEvent *event)
+{
+    if(!m_modCardMap.isEmpty()){
+        return;
+    }
+    // 重新加载卡片
+    ImageLoader::getInstance()->start();
+
+    clearModCard();
+    appendModCard(m_modInfoList, m_category);
+}
+
+/**
+* @author   XiaoAn
+* @brief    隐藏
+* @date     2026-04-18
+**/
+void CardContainer::hideEvent(QHideEvent *event)
+{
+    // 停止图片加载线程
+    ImageLoader::getInstance()->stop();
+
+    clearModCard();
+    QPixmapCache::clear();
+
+    QCoreApplication::processEvents();
+
+    HeapCompact(GetProcessHeap(), 0);
 }

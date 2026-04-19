@@ -39,18 +39,16 @@ MainWindow::MainWindow(QWidget *parent)
     initWidget();
 
     // 连接图片加载信号（单例模式，连接一次即可）
-    connect(ImageLoader::getInstance(), &ImageLoader::imageLoadedByPtr, this, [=](void *ptr, const QImage &image, bool fromCache){
-        ModCard *modCard = reinterpret_cast<ModCard*>(ptr);
-        if (!modCard) return;
-        // 更新卡片图片
+    connect(ImageLoader::getInstance(), &ImageLoader::imageLoadedByPtr, this, [=](QPointer<ModCard> modCard, const QImage &image, bool fromCache){
+        if (modCard.isNull()) return;
         modCard->loadImage(image);
     }, Qt::QueuedConnection);
 
-    connect(ImageLoader::getInstance(), &ImageLoader::imageLoadFailedByPtr, this, [=](void *ptr, const QString &errorStr){
-        ModCard *modCard = reinterpret_cast<ModCard*>(ptr);
-        if (!modCard) return;
+    connect(ImageLoader::getInstance(), &ImageLoader::imageLoadFailedByPtr, this, [=](QPointer<ModCard> modCard, const QString &errorStr){
+        if (modCard.isNull()) return;
         modCard->setImageErrorText(errorStr);
     }, Qt::QueuedConnection);
+    ImageLoader::getInstance()->start();
 
     // 全局互斥选中按钮
     m_buttonGroup.addButton(ui->pushButton_workshop);
@@ -224,10 +222,7 @@ void MainWindow::initWidget()
         QPoint globalBtnPos = ui->pushButton_categoryFilter->mapToGlobal(QPoint(0, 0));
         m_ckListWidget->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_categoryFilter->height());
         m_ckListWidget->show();
-    });
-
-    // 模组冲突面板
-    m_modConflictWidget = new ModConflictWidget(this);
+    });    
 }
 
 /**
@@ -400,6 +395,8 @@ void MainWindow::startGame()
     if(!success){
         QMessageBox::warning(this, "错误", "启动失败!", QMessageBox::Ok);
     }
+    // 启动游戏后自动最小化
+    showMinimized();
 }
 
 /**
@@ -409,6 +406,8 @@ void MainWindow::startGame()
 **/
 void MainWindow::importMod()
 {
+
+    ModConflictWidget *modConflictWidget = new ModConflictWidget(this);
     QStringList filePathList = QFileDialog::getOpenFileNames(this, "选择vpk文件", QDir::homePath(), "(*.vpk)");
     if(filePathList.isEmpty()) return;
 
@@ -449,12 +448,12 @@ void MainWindow::importMod()
 
     if(modInfoList.isEmpty()) return;
 
-    m_modConflictWidget->clearConflictMod();
-    m_modConflictWidget->detectConflictMod(modInfoList);
-    if(!m_modConflictWidget->conflictModList().isEmpty()){
-        QSize size = m_modConflictWidget->size();
-        m_modConflictWidget->move((width() - size.width()) / 2, (height() - size.height()) / 2);
-        m_modConflictWidget->show();
+    modConflictWidget->clearConflictMod();
+    modConflictWidget->detectConflictMod(modInfoList);
+    if(!modConflictWidget->conflictModList().isEmpty()){
+        QSize size = modConflictWidget->size();
+        modConflictWidget->move((width() - size.width()) / 2, (height() - size.height()) / 2);
+        modConflictWidget->show();
     }
 }
 
@@ -494,9 +493,10 @@ void MainWindow::moveToLocal()
 **/
 void MainWindow::checkConflictMod()
 {
-    m_modConflictWidget->clearConflictMod();
-    m_modConflictWidget->detectConflictMod();
-    QSize size = m_modConflictWidget->size();
-    m_modConflictWidget->move((width() - size.width()) / 2, (height() - size.height()) / 2);
-    m_modConflictWidget->show();
+    ModConflictWidget *modConflictWidget = new ModConflictWidget(this);
+    // m_modConflictWidget->clearConflictMod();
+    modConflictWidget->detectConflictMod();
+    QSize size = modConflictWidget->size();
+    modConflictWidget->move((width() - size.width()) / 2, (height() - size.height()) / 2);
+    modConflictWidget->show();
 }
