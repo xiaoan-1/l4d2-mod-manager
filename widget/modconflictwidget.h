@@ -35,6 +35,8 @@ public:
 private:
     void appendModCard(const ModInfo &modInfo);
 
+    void removeConflictMod(const ModInfo &modInfo);
+
 private:
     Ui::ModConflictWidget *ui;
 

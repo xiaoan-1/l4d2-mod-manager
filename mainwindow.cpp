@@ -7,7 +7,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDesktopServices>
-#include <QProcess>
+#include <QScrollBar>
 #include <QPlainTextEdit>
 #include <QDebug>
 
@@ -61,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
         connect(btn, &QAbstractButton::clicked, this, [=](){
             ui->checkBox_isDisabled->setDisabled(true);
             ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
+            ui->scrollArea->verticalScrollBar()->setValue(0);
             // 重置搜索、刷新统计信息
             ui->lineEdit_search->clear();
             refreshModCount();
@@ -134,8 +135,22 @@ MainWindow::MainWindow(QWidget *parent)
     });
     ui->checkBox_isDisabled->setChecked(m_disableModVisiable);
 
+    // 监听文件变化
+    m_fileWatcher.addPaths(QStringList() << gamePath + GameManager::WorkshopDir
+                                         << gamePath + GameManager::ModLocalDir
+                                         << gamePath + GameManager::ModTrashDir);
+    connect(&m_fileWatcher, &QFileSystemWatcher::directoryChanged, this, [=](const QString &path) {
+        if(m_buttonGroup.checkedButton() == ui->pushButton_workshop && path == gamePath + GameManager::WorkshopDir){
+            ui->pushButton_workshop->click();
+        }else if (m_buttonGroup.checkedButton() == ui->pushButton_localMod && path == gamePath + GameManager::ModLocalDir) {
+            ui->pushButton_localMod->click();
+        }else if (m_buttonGroup.checkedButton() == ui->pushButton_trashMod && path == gamePath + GameManager::ModTrashDir) {
+            ui->pushButton_trashMod->click();
+        }
+    });
+
     // 默认刷新
-    emit ui->pushButton_workshop->clicked();
+    ui->pushButton_workshop->click();
 }
 
 MainWindow::~MainWindow()
@@ -150,6 +165,9 @@ MainWindow::~MainWindow()
 **/
 void MainWindow::initWidget()
 {
+    // 设置模组卡片默认大小
+    ui->cardContainer->setCardSizeMode(ModCard::SizeMode::Normal);
+
     m_paramCheckWidget = new ParamCheckWidget(this);
 
     // 操作菜单
@@ -157,6 +175,9 @@ void MainWindow::initWidget()
     m_operationMenu->setWindowFlags(Qt::Popup);
     m_operationMenu->addAction("工坊移至本地", this, &MainWindow::moveToLocal);
     m_operationMenu->addAction("安装dvxk补丁", this, [=](){
+        if(QMessageBox::Cancel ==  QMessageBox::information(this, "提示", "是否安装dvxk补丁", QMessageBox::Ok | QMessageBox::Cancel)){
+            return;
+        }
         bool isSuccess = GameManager::copyDirectory(
             QCoreApplication::applicationDirPath() + "/patch/dxvk-2.7.1", GameManager::getInstance()->gamePath());
         if(isSuccess){
@@ -170,6 +191,9 @@ void MainWindow::initWidget()
         }
     });
     m_operationMenu->addAction("安装L4N平台", this, [=](){
+        if(QMessageBox::Cancel ==  QMessageBox::information(this, "提示", "是否安装L4N平台", QMessageBox::Ok | QMessageBox::Cancel)){
+            return;
+        }
         bool isSuccess = GameManager::copyDirectory(
             QCoreApplication::applicationDirPath() + "/patch/L4N_v2.1.6", GameManager::getInstance()->gamePath());
         if(isSuccess){
@@ -222,7 +246,7 @@ void MainWindow::initWidget()
         QPoint globalBtnPos = ui->pushButton_categoryFilter->mapToGlobal(QPoint(0, 0));
         m_ckListWidget->move(globalBtnPos.x(), globalBtnPos.y() + ui->pushButton_categoryFilter->height());
         m_ckListWidget->show();
-    });    
+    });
 }
 
 /**
@@ -238,6 +262,7 @@ void MainWindow::addCategory(const CategoryInfo &category)
     // 绑定点击事件
     connect(btn, &CategoryButton::clicked, this, [=](){
         ui->checkBox_isDisabled->setDisabled(false);
+        ui->scrollArea->verticalScrollBar()->setValue(0);
         ui->cardContainer->setDisabledVisiable(m_disableModVisiable);
         // 查询该分类的Mod信息
         QList<ModInfo> modInfoList = SqliteObj::getInstance()->getModInfoList(category.id);
@@ -406,8 +431,6 @@ void MainWindow::startGame()
 **/
 void MainWindow::importMod()
 {
-
-    ModConflictWidget *modConflictWidget = new ModConflictWidget(this);
     QStringList filePathList = QFileDialog::getOpenFileNames(this, "选择vpk文件", QDir::homePath(), "(*.vpk)");
     if(filePathList.isEmpty()) return;
 
@@ -448,7 +471,8 @@ void MainWindow::importMod()
 
     if(modInfoList.isEmpty()) return;
 
-    modConflictWidget->clearConflictMod();
+    // 检测导入的模组冲突
+    ModConflictWidget *modConflictWidget = new ModConflictWidget(this);
     modConflictWidget->detectConflictMod(modInfoList);
     if(!modConflictWidget->conflictModList().isEmpty()){
         QSize size = modConflictWidget->size();
@@ -494,7 +518,6 @@ void MainWindow::moveToLocal()
 void MainWindow::checkConflictMod()
 {
     ModConflictWidget *modConflictWidget = new ModConflictWidget(this);
-    // m_modConflictWidget->clearConflictMod();
     modConflictWidget->detectConflictMod();
     QSize size = modConflictWidget->size();
     modConflictWidget->move((width() - size.width()) / 2, (height() - size.height()) / 2);

@@ -14,23 +14,24 @@ ModConflictWidget::ModConflictWidget(QWidget *parent)
 
     m_layout = qobject_cast<QVBoxLayout*>(ui->scrollWidget_left->layout());
 
+    ui->widget_container->setCardSizeMode(ModCard::SizeMode::Conflict);
+
     connect(ui->pushButton_close, &QPushButton::clicked, this, &ModConflictWidget::deleteLater);
 
-    ui->widget_container->setCardSizeStyle(ModCard::SizeStyle::Conflict);
 
     // 当布局发生变化时，检查剩余的卡片
-    connect(ui->widget_container, &CardContainer::updatedLayout, this, [=](){
-        QList<ModCard *> modCardList = ui->widget_container->modCardList();
+    // connect(ui->widget_container, &CardContainer::updatedLayout, this, [=](){
+    //     QList<ModCard *> modCardList = ui->widget_container->modCardList();
 
-        if(!modCardList.isEmpty() || !m_currentCard) return;
+    //     if(!modCardList.isEmpty() || !m_currentCard) return;
 
-        // 全部被禁用，则删除当前选中模组卡片
-        m_currentCard->deleteLater();
-        m_cardList.removeAll(m_currentCard);
-        if(!m_cardList.isEmpty()){
-            emit m_cardList.first()->clicked();
-        }
-    });
+    //     // 全部被禁用，则删除当前选中模组卡片
+    //     m_currentCard->deleteLater();
+    //     m_cardList.removeAll(m_currentCard);
+    //     if(!m_cardList.isEmpty()){
+    //         emit m_cardList.first()->clicked();
+    //     }
+    // });
 }
 
 ModConflictWidget::~ModConflictWidget()
@@ -81,8 +82,11 @@ void ModConflictWidget::detectConflictMod()
         }else{
             m_conflictModMap.insert(firModInfo, QList<ModInfo>() << secModInfo);
         }
+    }
 
-        appendModCard(firModInfo);
+    for(auto it = m_conflictModMap.begin(); it != m_conflictModMap.end(); ++it)
+    {
+        appendModCard(it.key());
     }
 
     if(!m_cardList.isEmpty()){
@@ -125,9 +129,12 @@ void ModConflictWidget::detectConflictMod(const QList<ModInfo> &modInfoList)
             conflictModInfoList.append(allModInfoList[idx]);
         }
         m_conflictModMap.insert(modInfo, conflictModInfoList);
-
-        appendModCard(modInfo);
     }
+    for(auto it = m_conflictModMap.begin(); it != m_conflictModMap.end(); ++it)
+    {
+        appendModCard(it.key());
+    }
+
     if(!m_cardList.isEmpty()){
         emit m_cardList.first()->clicked();
     }
@@ -151,7 +158,8 @@ QList<ModInfo> ModConflictWidget::conflictModList()
 void ModConflictWidget::appendModCard(const ModInfo &modInfo)
 {
     // 左侧冲突模组
-    ModCard *modCard = new ModCard(modInfo, this, ModCard::SizeStyle::Conflict);
+    ModCard *modCard = new ModCard(modInfo, this, ModCard::SizeMode::Conflict);
+    modCard->setFixedSize(220, 200);
     m_layout->insertWidget(m_layout->count() - 1, modCard);
     m_cardList.append(modCard);
 
@@ -160,16 +168,21 @@ void ModConflictWidget::appendModCard(const ModInfo &modInfo)
         m_currentCard = modCard;
         ui->widget_container->clearModCard();
         ui->widget_container->appendModCard(m_conflictModMap.value(modInfo));
+
+        // 右侧模组被禁用后，删除左侧相同模组
+        QList<ModCard *> modCardList = ui->widget_container->modCardList();
+        foreach (ModCard *modCardR, modCardList) {
+            connect(modCardR, &ModCard::toggleDisabled, this, [=](bool isDisabled){
+                if(!isDisabled) return;
+                removeConflictMod(modCardR->modInfo());
+            });
+        }
     });
 
     // 销毁模组卡片
-    connect(modCard, &ModCard::destroyCard, this, [=](){
-        m_conflictModMap.remove(modCard->modInfo());
-        modCard->deleteLater();
-        m_cardList.removeAll(modCard);
-        if(modCard == m_currentCard && !m_cardList.isEmpty()){
-            emit m_cardList.first()->clicked();
-        }
+    connect(modCard, &ModCard::toggleDisabled, this, [=](bool isDisabled){
+        if(!isDisabled) return;
+        removeConflictMod(modCard->modInfo());
     });
 
     // 当模组卡片大小变化时提交图像加载任务
@@ -183,6 +196,55 @@ void ModConflictWidget::appendModCard(const ModInfo &modInfo)
         task.modCardPtr = modCard;
         ImageLoader::getInstance()->addTask(task);
     });
+}
+
+/**
+* @author   XiaoAn
+* @brief    移除冲突的模组
+* @date     2026-04-20
+**/
+void ModConflictWidget::removeConflictMod(const ModInfo &modInfo)
+{
+    // 移除模组信息映射的所有该模组信息
+    QMutableMapIterator<ModInfo, QList<ModInfo>> it(m_conflictModMap);
+    while (it.hasNext()) {
+        it.next();
+
+        // 从当前列表中移除所有冲突模组
+        it.value().removeAll(modInfo);
+
+        // 如果列表变空 或者 键等于 n，则删除整个条目
+        if (it.value().isEmpty() || it.key() == modInfo) {
+            it.remove();
+        }
+    }
+
+    // 移除模组卡片控件
+    QList<ModCard *> modCardList = ui->widget_container->modCardList();
+
+    if(modCardList.isEmpty() && m_currentCard){
+        m_currentCard->deleteLater();
+        m_currentCard = nullptr;
+    }
+
+    foreach (ModCard *modCard, m_cardList) {
+        if(modCard->modInfo().id != modInfo.id) continue;
+
+        if(modCard == m_currentCard){
+            m_currentCard = nullptr;
+        }
+
+        modCard->deleteLater();
+        m_cardList.removeAll(modCard);
+        // 只可能存在一个
+        break;
+    }
+
+    // 初始化选中
+    if(m_currentCard == nullptr && !m_cardList.isEmpty()){
+        m_currentCard = m_cardList.first();
+        emit m_currentCard->clicked();
+    }
 }
 
 

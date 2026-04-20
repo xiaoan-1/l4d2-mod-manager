@@ -32,7 +32,7 @@ public:
 
 public:
     // 设置卡片大小
-    void setCardSizeStyle(ModCard::SizeStyle sizeStyle);
+    void setCardSizeMode(ModCard::SizeMode sizeMode);
 
     // 是否显示禁用mod
     void setDisabledVisiable(bool visiable);
@@ -60,7 +60,6 @@ protected:
     void hideEvent(QHideEvent *event) override;
 
 signals:
-    // 布局发生变化信号
     void updatedLayout();
 
 private:
@@ -83,9 +82,10 @@ private:
     QMap<QString, bool> m_categoryFilter;
 
     // 大小
-    ModCard::SizeStyle m_sizeStyle = ModCard::SizeStyle::Normal;
+    ModCard::SizeMode m_sizeMode = ModCard::SizeMode::Normal;
+
     // 卡片固定大小
-    QSize m_cardSize = {300, 300};
+    QSize m_cardSize = {320, 300};
 
     // 间距
     int m_horizontalSpacing = 10;

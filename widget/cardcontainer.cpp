@@ -44,12 +44,37 @@ void CardContainer::appendModCard(const QList<ModInfo> &modInfoList, const Categ
     m_category = category;
     m_modInfoList = modInfoList;
     foreach (const ModInfo &modInfo, modInfoList) {
-        ModCard *modCard = new ModCard(modInfo, ui->centralwidget, m_sizeStyle);
+        ModCard *modCard = new ModCard(modInfo, ui->centralwidget, m_sizeMode);
+        modCard->setFixedSize(m_cardSize);
         modCard->setCurrentCategory(category);
         m_modCardMap.insert(modInfo.id, modCard);
 
-        // 卡片销毁或者隐藏时触发布局更新
-        connect(modCard, &ModCard::destroyCard, this, &CardContainer::removeModCard);
+        // 设置分类信号, 应用过滤更新布局即可
+        connect(modCard, &ModCard::classified, this, &CardContainer::updateLayout);
+
+        // 启用和禁用
+        connect(modCard, &ModCard::toggleDisabled, this, [=](){
+            if(category.id == -1){
+                // 非分类情况下需要移除卡片
+                modCard->deleteLater();
+                m_modCardMap.remove(modInfo.id);
+            }
+            updateLayout();
+        });
+
+        // 移除当前分类, 必然删除该模组卡片
+        connect(modCard, &ModCard::removeCategory, this, [=](){
+            modCard->deleteLater();
+            m_modCardMap.remove(modInfo.id);
+            updateLayout();
+        });
+
+        // 删除模组文件, 必然删除该模组卡片
+        connect(modCard, &ModCard::removeModFile, this, [=](){
+            modCard->deleteLater();
+            m_modCardMap.remove(modInfo.id);
+            updateLayout();
+        });
 
         // 当模组卡片大小变化时提交图像加载任务
         connect(modCard, &ModCard::imgResize, this, [=](){
@@ -100,9 +125,19 @@ void CardContainer::clearModCard()
 * @brief    设置模组卡片的大小模式
 * @date     2026-04-18
 **/
-void CardContainer::setCardSizeStyle(ModCard::SizeStyle sizeStyle)
+void CardContainer::setCardSizeMode(ModCard::SizeMode sizeMode)
 {
-    m_sizeStyle = sizeStyle;
+    m_sizeMode = sizeMode;
+    if(sizeMode == ModCard::SizeMode::Normal){
+        m_cardSize = {320, 300};
+    }else if(sizeMode == ModCard::SizeMode::Conflict){
+        m_cardSize = {220, 200};
+    }
+    for(auto it = m_modCardMap.begin(); it != m_modCardMap.end(); ++it)
+    {
+        it.value()->setFixedSize(m_cardSize);
+    }
+    updateLayout();
 }
 
 /**
@@ -243,7 +278,6 @@ void CardContainer::updateLayout()
         }
     }
     setFixedHeight(maxY + m_bottomMargin);
-
     emit updatedLayout();
 }
 

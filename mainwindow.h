@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QButtonGroup>
+#include <QFileSystemWatcher>
 #include <QMenu>
 
 #include "sqliteobj.h"
@@ -72,5 +73,8 @@ private:
 
     // 是否显示禁用Mod
     bool m_disableModVisiable = true;
+
+    // 文件监听
+    QFileSystemWatcher m_fileWatcher;
 };
 #endif // MAINWINDOW_H

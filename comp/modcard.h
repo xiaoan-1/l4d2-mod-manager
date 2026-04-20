@@ -15,7 +15,7 @@ class ModCard : public QWidget
 {
     Q_OBJECT
 public:
-    enum class SizeStyle{
+    enum class SizeMode{
         Normal,
         Small,
         Large,
@@ -25,44 +25,38 @@ public:
     explicit ModCard(QWidget *parent = nullptr);
     ~ModCard();
 
-    ModCard(const ModInfo &modInfo, QWidget *parent = nullptr, SizeStyle sizeStyle = SizeStyle::Normal);
+    ModCard(const ModInfo &modInfo, QWidget *parent = nullptr, SizeMode sizeStyle = SizeMode::Normal);
 
 public:
-    // 获取Mod信息
-    ModInfo modInfo() const;
+    // 设置大小模式
+    void setSizeMode(SizeMode sizeMode);
 
     // 设置当前Mod分类
     void setCurrentCategory(const CategoryInfo &category);
 
-    // 加载图片
-    void loadImage(const QImage &image);
-
-    // 是否已加载图片
-    bool isLoadedImage();
-
-    // 刷新
-    void updateModInfo();
-
-    // 设置可选性
-    void setCheckable(bool checkable);
-
-    // 获取可选性
-    bool checkable() const;
-
-    // 获取选中状态
-    bool isChecked() const;
+    // 获取图片大小
+    QSize getImageSize();
 
     // 是否存在分类
     bool hasCategory(const QString &catName);
 
-    // 已分类列表
-    QList<CategoryInfo> classfiedCategory() { return m_classifiedList; };
+    // 刷新模组信息
+    void updateModInfo();
 
-    // 获取图片大小
-    QSize getImageSize();
+public slots:
+
+    // 加载图片
+    void loadImage(const QImage &image);
 
     // 设置图片错误信息
     void setImageErrorText(const QString &errorStr);
+
+public:
+    // 获取Mod信息
+    ModInfo modInfo() const {return m_modInfo;};
+
+    // 已分类列表
+    QList<CategoryInfo> classfiedCategory() { return m_classifiedList; };
 
 private:
     // 备注
@@ -74,6 +68,9 @@ private:
     // 分类
     void classify();
 
+    // 移除分类和删除文件操作
+    void remove();
+
 protected:
     void enterEvent(QEnterEvent *event) override;
 
@@ -82,14 +79,8 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 signals:
-    // 隐藏信号
-    void hideCard();
-
-    // 销毁信号
-    void destroyCard(const int &modId);
-
     // 分类信号
-    void classified(const QString &cat);
+    void classified();
 
     // 图片标齐全大小变化
     void imgResize();
@@ -97,17 +88,20 @@ signals:
     // 点击事件
     void clicked();
 
-    // 启用与禁用
-    void toggleEnabled(bool enabled);
+    // 启用与禁用信号
+    void toggleDisabled(bool disabled);
+
+    // 移除分类信号
+    void removeCategory();
+
+    // 删除文件信号
+    void removeModFile();
 
 private:
     Ui::ModCard *ui;
 
-    // 单选框
-    QCheckBox *m_checkBox;
-
     // 移除/删除按钮
-    QPushButton *m_button = nullptr;
+    QPushButton *m_removeButton = nullptr;
 
     // 备注编辑框
     QLineEdit *m_remarkEdit = nullptr;
@@ -118,14 +112,8 @@ private:
     // 当前分类
     CategoryInfo m_category;
 
-    // 所有分类信息
-    QList<CategoryInfo> m_categoryList;
-
-    // 已分类的分类信息
+    // 该模组的所有分类
     QList<CategoryInfo> m_classifiedList;
-
-    // 模组信息
-    QMap<QString, QString> m_addonInfoMap;
 };
 
 #endif // MODCARD_H
